@@ -1,0 +1,22 @@
+{
+  "crossover": {
+    "url": "https://media.codeweavers.com/pub/crossover/source/crossover-sources-26.3.0.tar.gz",
+    "sha256": "ac99c8ca4b3848f3e81784135f023df266b61c2345726ea55a50b3e030dd6872"
+  },
+  "llvm-mingw": {
+    "url": "https://github.com/mstorsjo/llvm-mingw/releases/download/20260922/llvm-mingw-20260922-ucrt-macos-universal.tar.xz",
+    "sha256": "52e5f5a7b131021d0c39a37a38fa380a1da7885cd04bd61afd0cd4ecfb8bc1f3"
+  },
+  "proton": {
+    "url": "https://github.com/ValveSoftware/Proton/archive/5b89db940e0ebe3a137a6009a3589232fe084c09.tar.gz",
+    "sha256": "ead49324ae9490ca88c10655117c1d71d66b2c39f9772a097fb7d5ed39d04b8f"
+  },
+  "steam-windows": {
+    "url": "https://client-update.akamai.steamstatic.com/bins_win32.zip.23e34a6d4b10596a44561a5100dac5585d2517da",
+    "sha256": "8b712b2a3412a9066b7725f4e1c5cef9a7ca5b187b6585a5b92d25d09df0ba62"
+  },
+  "nettle": {
+    "url": "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz",
+    "sha256": "b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c"
+  }
+}

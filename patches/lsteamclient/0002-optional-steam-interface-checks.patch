@@ -1,0 +1,35 @@
+Load Steam_IsKnownInterface and Steam_NotifyMissingInterface only when the
+host steamclient exports them. The macOS client exports neither.
+
+--- a/unixlib.cpp	2026-09-25 14:20:08
++++ b/unixlib.cpp	2026-09-25 14:20:08
+@@ -795,8 +795,9 @@
+     LOAD_FUNC( Steam_GetAPICallResult );
+     LOAD_FUNC( Steam_FreeLastCallback );
+     LOAD_FUNC( Steam_ReleaseThreadLocalMemory );
+-    LOAD_FUNC( Steam_IsKnownInterface );
+-    LOAD_FUNC( Steam_NotifyMissingInterface );
++    /* The macOS client exports neither of these. */
++    p_Steam_IsKnownInterface = (decltype(p_Steam_IsKnownInterface))dlsym( steamclient, "Steam_IsKnownInterface" );
++    p_Steam_NotifyMissingInterface = (decltype(p_Steam_NotifyMissingInterface))dlsym( steamclient, "Steam_NotifyMissingInterface" );
+ 
+     TRACE( "Loaded host steamclient from %s\n", debugstr_a(path) );
+     return 0;
+@@ -851,14 +852,15 @@
+ template< typename Params >
+ static NTSTATUS steamclient_Steam_IsKnownInterface( Params *params, bool wow64 )
+ {
+-    params->_ret = p_Steam_IsKnownInterface( params->version );
++    /* Without the check, an unknown version still yields no interface later. */
++    params->_ret = p_Steam_IsKnownInterface ? p_Steam_IsKnownInterface( params->version ) : true;
+     return 0;
+ }
+ 
+ template< typename Params >
+ static NTSTATUS steamclient_Steam_NotifyMissingInterface( Params *params, bool wow64 )
+ {
+-    p_Steam_NotifyMissingInterface( params->pipe, params->version );
++    if (p_Steam_NotifyMissingInterface) p_Steam_NotifyMissingInterface( params->pipe, params->version );
+     return 0;
+ }
+ 

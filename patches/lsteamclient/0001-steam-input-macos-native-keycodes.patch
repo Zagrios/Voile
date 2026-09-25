@@ -1,0 +1,77 @@
+Map Windows virtual keys to macOS virtual key codes for ISteamHTMLSurface.
+Upstream lsteamclient only knows X11 keysyms.
+
+--- a/unix_steam_input_manual.cpp	2026-09-25 13:46:49
++++ b/unix_steam_input_manual.cpp	2026-09-25 13:47:08
+@@ -192,6 +192,71 @@
+         return vk_to_xkeysym[win_vk];
+     return 0;
+ }
++#elif defined(__APPLE__)
++/* macOS virtual key codes, the kVK_* values of HIToolbox's Events.h. */
++uint32_t manual_convert_nNativeKeyCode( uint32_t win_vk )
++{
++    static const uint8_t letters[26] =
++    {
++        0x00, 0x0B, 0x08, 0x02, 0x0E, 0x03, 0x05, 0x04, 0x22, 0x26, 0x28, 0x25, 0x2E,
++        0x2D, 0x1F, 0x23, 0x0C, 0x0F, 0x01, 0x11, 0x20, 0x09, 0x0D, 0x07, 0x10, 0x06,
++    };
++    static const uint8_t digits[10] = { 0x1D, 0x12, 0x13, 0x14, 0x15, 0x17, 0x16, 0x1A, 0x1C, 0x19 };
++    static const uint8_t keypad[10] = { 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5B, 0x5C };
++    static const uint8_t functions[20] =
++    {
++        0x7A, 0x78, 0x63, 0x76, 0x60, 0x61, 0x62, 0x64, 0x65, 0x6D,
++        0x67, 0x6F, 0x69, 0x6B, 0x71, 0x6A, 0x40, 0x4F, 0x50, 0x5A,
++    };
++
++    if (win_vk >= 'A' && win_vk <= 'Z') return letters[win_vk - 'A'];
++    if (win_vk >= '0' && win_vk <= '9') return digits[win_vk - '0'];
++    if (win_vk >= 0x60 && win_vk <= 0x69) return keypad[win_vk - 0x60]; /* VK_NUMPAD0-9 */
++    if (win_vk >= 0x70 && win_vk <= 0x83) return functions[win_vk - 0x70]; /* VK_F1-F20 */
++
++    switch (win_vk)
++    {
++    case 0x08 /* VK_BACK */: return 0x33;
++    case 0x09 /* VK_TAB */: return 0x30;
++    case 0x0D /* VK_RETURN */: return 0x24;
++    case 0x10 /* VK_SHIFT */: case 0xA0 /* VK_LSHIFT */: return 0x38;
++    case 0xA1 /* VK_RSHIFT */: return 0x3C;
++    case 0x11 /* VK_CONTROL */: case 0xA2 /* VK_LCONTROL */: return 0x3B;
++    case 0xA3 /* VK_RCONTROL */: return 0x3E;
++    case 0x12 /* VK_MENU */: case 0xA4 /* VK_LMENU */: return 0x3A;
++    case 0xA5 /* VK_RMENU */: return 0x3D;
++    case 0x14 /* VK_CAPITAL */: return 0x39;
++    case 0x1B /* VK_ESCAPE */: return 0x35;
++    case 0x20 /* VK_SPACE */: return 0x31;
++    case 0x21 /* VK_PRIOR */: return 0x74;
++    case 0x22 /* VK_NEXT */: return 0x79;
++    case 0x23 /* VK_END */: return 0x77;
++    case 0x24 /* VK_HOME */: return 0x73;
++    case 0x25 /* VK_LEFT */: return 0x7B;
++    case 0x26 /* VK_UP */: return 0x7E;
++    case 0x27 /* VK_RIGHT */: return 0x7C;
++    case 0x28 /* VK_DOWN */: return 0x7D;
++    case 0x2E /* VK_DELETE */: return 0x75;
++    case 0x2F /* VK_HELP */: return 0x72;
++    case 0x6A /* VK_MULTIPLY */: return 0x43;
++    case 0x6B /* VK_ADD */: return 0x45;
++    case 0x6D /* VK_SUBTRACT */: return 0x4E;
++    case 0x6E /* VK_DECIMAL */: return 0x41;
++    case 0x6F /* VK_DIVIDE */: return 0x4B;
++    case 0xBA /* VK_OEM_1 */: return 0x29;
++    case 0xBB /* VK_OEM_PLUS */: return 0x18;
++    case 0xBC /* VK_OEM_COMMA */: return 0x2B;
++    case 0xBD /* VK_OEM_MINUS */: return 0x1B;
++    case 0xBE /* VK_OEM_PERIOD */: return 0x2F;
++    case 0xBF /* VK_OEM_2 */: return 0x2C;
++    case 0xC0 /* VK_OEM_3 */: return 0x32;
++    case 0xDB /* VK_OEM_4 */: return 0x21;
++    case 0xDC /* VK_OEM_5 */: return 0x2A;
++    case 0xDD /* VK_OEM_6 */: return 0x1E;
++    case 0xDE /* VK_OEM_7 */: return 0x27;
++    }
++    return 0;
++}
+ #else
+ #error You must implement VK<->Native keysym conversion for this platform.
+ #endif
