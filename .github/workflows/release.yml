@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+
+jobs:
+  runtime:
+    # Private repositories pay macOS minutes at ten times the Linux rate, and a
+    # full build outlasts the free ones. Until Forge's repositories are public,
+    # releases are published by hand with package.sh and publish.sh.
+    if: ${{ !github.event.repository.private }}
+    runs-on: macos-26
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Install the build tools
+        run: |
+          arch -x86_64 /usr/bin/true 2>/dev/null ||
+            sudo softwareupdate --install-rosetta --agree-to-license
+          brew install bison meson ninja pkgconf
+
+      - name: Build and package
+        run: ./scripts/package.sh "$GITHUB_REF_NAME"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/publish.sh "$GITHUB_REF_NAME"

@@ -23,6 +23,21 @@ To launch Windows Steam games from a development build of Forge, install the run
 
 A `winedebug` file at the root of an installed runtime replaces Forge's default Wine debug channels, for example `err+all,+steamclient`. Forge writes Wine's output to `~/Library/Logs/Forge/Steam/wine-<appid>.log`.
 
+## Releases
+
+A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The revision counts the releases built on one CrossOver version.
+
+```sh
+./scripts/package.sh v26.3.0-1  # build/release/forge-runtime-v26.3.0-1.tar.xz and its .sha256
+./scripts/publish.sh v26.3.0-1  # the GitHub release, tagged on the packaged commit
+```
+
+`package.sh` refuses uncommitted changes, builds, and drops the debug information, which takes the runtime from about 1 GB to 400 MB. The archive holds one folder with the runtime, Valve's steamclient libraries in `steam/`, the licenses of what it ships in `licenses/`, and `runtime.json`, which names its CrossOver version and its forge-runtime, forge-wine and Proton commits. Before it finishes, the script extracts the archive and runs the 64-bit and 32-bit `cmd.exe` in a new prefix. D3DMetal is never in it.
+
+`publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit.
+
+Once the repositories are public, pushing a tag runs both scripts in the Release workflow, on GitHub's `macos-26` runners, from a clean checkout. While they are private, the workflow skips itself: private repositories pay macOS minutes at ten times the Linux rate, and a full build outlasts the free ones.
+
 ## Inputs
 
 - A component that is a git repository and builds from source is a submodule, pinned by commit:
