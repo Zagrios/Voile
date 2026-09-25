@@ -48,7 +48,7 @@ Once the repositories are public, pushing a tag runs both scripts in the Release
 
 ## How Forge runs a game
 
-Each Windows installation gets its own prefix in Forge's `<library>/Prefixes`, named after the installation folder. Forge creates it on the first launch and copies Valve's `steamclient.dll` and `steamclient64.dll` into `C:\Program Files (x86)\Steam`. The game starts behind Proton's `steam.exe`, and lsteamclient connects it to Forge's Steam host. The prefix's user folders stay inside it instead of linking to the Mac home, and Steam Auto-Cloud maps its Windows roots, such as `%WinAppDataLocalLow%`, into the prefix's `crossover` profile. Games that rely on the SDK's RemoteStorage get no Cloud yet.
+Each Windows installation gets its own prefix in Forge's `<library>/Prefixes`, named after the installation folder. Forge creates it on the first launch and copies Valve's `steamclient.dll` and `steamclient64.dll` into `C:\Program Files (x86)\Steam`. The game starts behind Proton's `steam.exe`, and lsteamclient connects it to Forge's Steam host. The prefix's user folders stay inside it instead of linking to the Mac home, and Steam Auto-Cloud maps its Windows roots, such as `%WinAppDataLocalLow%`, into the prefix's `crossover` profile. Files a game writes through the SDK's RemoteStorage never enter the prefix: lsteamclient hands them to the macOS Steam engine, whose storage Forge syncs as for a macOS game.
 
 ## D3DMetal
 
