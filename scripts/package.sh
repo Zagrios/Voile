@@ -52,11 +52,18 @@ strip_debug() {
     done
 }
 
+# Apple's license forbids modifying D3DMetal, so it goes in after stripping:
+# its unix libraries link to libd3dshared.dylib, which strip would follow.
+add_d3dmetal() {
+    ditto "$WORK/d3dmetal/lib" "$PACKAGE/lib"
+}
+
 # The licenses of everything the archive ships. Valve's steamclient libraries
 # come with none.
 copy_licenses() {
     local licenses="$PACKAGE/licenses"
-    mkdir "$licenses"
+    mkdir -p "$licenses/d3dmetal"
+    cp "$WORK/d3dmetal/License.rtf" "$WORK/d3dmetal/Acknowledgements.rtf" "$licenses/d3dmetal/"
     cp "$RUNTIME/wine/COPYING.LIB" "$licenses/wine.txt"
     cp "$WORK/src/freetype/docs/FTL.TXT" "$licenses/freetype.txt"
     cp "$WORK/src/gnutls/gnutls/doc/COPYING.LESSER" "$licenses/gnutls.txt"
@@ -75,7 +82,8 @@ write_manifest() {
   "forge-runtime": "$(git -C "$RUNTIME" rev-parse HEAD)",
   "crossover": "$CROSSOVER",
   "forge-wine": "$(git -C "$RUNTIME/wine" rev-parse HEAD)",
-  "proton": "$proton"
+  "proton": "$proton",
+  "d3dmetal": "$(cat "$WORK/d3dmetal/VERSION")"
 }
 EOF
 }
@@ -105,6 +113,7 @@ rm -rf "$PACKAGE/share/man"
 mkdir "$PACKAGE/steam"
 cp "$WORK/steam-windows/steamclient.dll" "$WORK/steam-windows/steamclient64.dll" "$PACKAGE/steam/"
 strip_debug
+add_d3dmetal
 copy_licenses
 write_manifest
 COPYFILE_DISABLE=1 tar --create --xz --options xz:compression-level=9,xz:threads=0 \

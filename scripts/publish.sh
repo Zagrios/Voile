@@ -32,6 +32,6 @@ if tagged="$(gh api "repos/{owner}/{repo}/commits/$VERSION" --jq .sha 2>/dev/nul
     [[ "$tagged" == "$commit" ]] || fail "$VERSION is on $tagged, not on the packaged $commit"
 fi
 notes="CrossOver $(value crossover), Zagrios/forge-wine@$(value forge-wine),"
-notes+=" ValveSoftware/Proton@$(value proton)."
+notes+=" ValveSoftware/Proton@$(value proton), D3DMetal from $(value d3dmetal)."
 gh release create "$VERSION" "$ARCHIVE" "$ARCHIVE.sha256" --target "$commit" \
     --title "$VERSION" --notes "$notes"

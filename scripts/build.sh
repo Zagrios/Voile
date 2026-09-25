@@ -14,6 +14,7 @@ GNUTLS_PREFIX="$DEPS/gnutls"
 OBJECTS="$WORK/obj"
 STAGE="$WORK/stage"
 STEAM_WINDOWS="$WORK/steam-windows"
+D3DMETAL="$WORK/d3dmetal"
 TOOLCHAIN="$WORK/toolchain/llvm-mingw"
 JOBS="$(sysctl -n hw.ncpu)"
 export MACOSX_DEPLOYMENT_TARGET=26.0
@@ -345,6 +346,20 @@ build_steam_windows() {
     stamp steam-windows "$key"
 }
 
+# D3DMetal stays out of the stage, which remains Wine's own: package.sh lays it
+# over the runtime unmodified, and wine-dev.sh and install-dev.sh over theirs.
+build_d3dmetal() {
+    local archive key
+    archive="$(fetch d3dmetal)"
+    key="$(field d3dmetal sha256)"
+    current d3dmetal "$key" && return
+    echo "==> D3DMetal"
+    rm -rf "$D3DMETAL"
+    mkdir -p "$D3DMETAL"
+    tar -xJf "$archive" -C "$D3DMETAL" --strip-components 1
+    stamp d3dmetal "$key"
+}
+
 build_toolchain
 build_sources
 build_proton_sources
@@ -353,5 +368,6 @@ build_gnutls
 build_wine
 build_steam
 build_steam_windows
+build_d3dmetal
 touch "$WORK/stamps"
 echo "Wine runtime: $STAGE"

@@ -18,5 +18,9 @@
   "nettle": {
     "url": "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz",
     "sha256": "b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c"
+  },
+  "d3dmetal": {
+    "url": "https://github.com/Zagrios/forge-runtime/releases/download/d3dmetal-4.0-beta2/d3dmetal-4.0-beta2.tar.xz",
+    "sha256": "5ef3adc422b0c5b6958c2702afe6170e7e7b47680dce70194ff9dffdd40d2965"
   }
 }

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Installs the locally built runtime where a development build of Forge looks
-# for it, with the D3DMetal copied by import-d3dmetal.sh when there is one.
+# for it, with the D3DMetal the build extracted.
 # Released builds of Forge will download their runtime instead.
 set -euo pipefail
 WORK="$(cd "$(dirname "$0")/.." && pwd)/build"
