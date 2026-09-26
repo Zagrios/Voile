@@ -1,11 +1,11 @@
 #!/bin/bash
 # Builds the runtime, then packages it the way a release publishes it:
-# build/release/forge-runtime-<version>.tar.xz and its SHA-256.
+# build/release/voile-<version>.tar.xz and its SHA-256.
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$RUNTIME/build"
 VERSION="${1:-}"
-NAME="forge-runtime-$VERSION"
+NAME="voile-$VERSION"
 PACKAGE="$WORK/package/$NAME"
 RELEASE="$WORK/release"
 ARCHIVE="$RELEASE/$NAME.tar.xz"
@@ -79,9 +79,9 @@ write_manifest() {
     cat > "$PACKAGE/runtime.json" <<EOF
 {
   "version": "$VERSION",
-  "forge-runtime": "$(git -C "$RUNTIME" rev-parse HEAD)",
+  "voile": "$(git -C "$RUNTIME" rev-parse HEAD)",
   "crossover": "$CROSSOVER",
-  "forge-wine": "$(git -C "$RUNTIME/wine" rev-parse HEAD)",
+  "voile-wine": "$(git -C "$RUNTIME/wine" rev-parse HEAD)",
   "proton": "$proton",
   "d3dmetal": "$(cat "$WORK/d3dmetal/VERSION")"
 }

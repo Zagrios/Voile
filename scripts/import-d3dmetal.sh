@@ -44,5 +44,5 @@ SHA-256: $(shasum -a 256 "$ARCHIVE" | cut -d' ' -f1)
 Publish it, then point sources.json's "d3dmetal" at it with this checksum:
   gh release create $NAME "$ARCHIVE" --title "$VERSION" \\
     --notes "D3DMetal from Apple's Game Porting Toolkit, unmodified."
-  https://github.com/Zagrios/forge-runtime/releases/download/$NAME/$NAME.tar.xz
+  https://github.com/Zagrios/voile/releases/download/$NAME/$NAME.tar.xz
 EOF

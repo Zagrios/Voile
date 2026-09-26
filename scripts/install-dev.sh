@@ -1,11 +1,11 @@
 #!/bin/bash
-# Installs the locally built runtime where a development build of Forge looks
+# Installs the locally built runtime where a development build of SailOver looks
 # for it, with the D3DMetal the build extracted.
-# Released builds of Forge will download their runtime instead.
+# Released builds of SailOver will download their runtime instead.
 set -euo pipefail
 WORK="$(cd "$(dirname "$0")/.." && pwd)/build"
-LIBRARY="${FORGE_LIBRARY_DIRECTORY:-$HOME/Library/Application Support/com.zagrios.forge}"
-DESTINATION="$LIBRARY/WineRuntime/current"
+LIBRARY="${SAILOVER_LIBRARY_DIRECTORY:-$HOME/Library/Application Support/com.zagrios.sailover}"
+DESTINATION="$LIBRARY/Voile/current"
 
 if [[ ! -x "$WORK/stage/bin/wine" || ! -f "$WORK/steam-windows/steamclient64.dll" ]]; then
     echo "Build the runtime first: ./scripts/build.sh" >&2

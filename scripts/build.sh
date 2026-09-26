@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds Forge's Wine runtime from the wine submodule and the pinned inputs in
+# Builds SailOver's Wine runtime from the wine submodule and the pinned inputs in
 # sources.json. Each step reruns only when its inputs change.
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
@@ -153,11 +153,11 @@ build_toolchain() {
 }
 
 # The CrossOver tarball provides the libraries Wine links. Wine itself is the
-# submodule, built from its checkout: Wine changes are commits in forge-wine,
+# submodule, built from its checkout: Wine changes are commits in voile-wine,
 # never patches here.
 build_sources() {
     local archive components=()
-    [[ ! -d "$RUNTIME/patches/wine" ]] || fail "Commit Wine changes to forge-wine instead of patches/wine"
+    [[ ! -d "$RUNTIME/patches/wine" ]] || fail "Commit Wine changes to voile-wine instead of patches/wine"
     archive="$(fetch crossover)"
     while read -r component; do
         components+=("$component")

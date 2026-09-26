@@ -1,4 +1,4 @@
 [submodule "wine"]
 	path = wine
-	url = https://github.com/Zagrios/forge-wine.git
+	url = https://github.com/Zagrios/voile-wine.git
 	branch = main

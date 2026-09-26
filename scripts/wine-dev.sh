@@ -1,6 +1,6 @@
 #!/bin/bash
 # Runs the locally built Wine runtime against a development prefix.
-# FORGE_GRAPHICS=d3dmetal uses the D3DMetal the build extracted.
+# SAILOVER_GRAPHICS=d3dmetal uses the D3DMetal the build extracted.
 set -euo pipefail
 WORK="$(cd "$(dirname "$0")/.." && pwd)/build"
 STAGE="$WORK/stage"
@@ -10,7 +10,7 @@ if [[ ! -x "$STAGE/bin/wine" ]]; then
 fi
 export WINEPREFIX="${WINEPREFIX:-$WORK/prefix}"
 
-case "${FORGE_GRAPHICS:-wined3d}" in
+case "${SAILOVER_GRAPHICS:-wined3d}" in
     wined3d) ;;
     d3dmetal)
         D3DMETAL="$WORK/d3dmetal"
@@ -32,7 +32,7 @@ case "${FORGE_GRAPHICS:-wined3d}" in
         export CX_ACTIVE_GRAPHICS_BACKEND=d3dmetal
         ;;
     *)
-        echo "Unknown FORGE_GRAPHICS: $FORGE_GRAPHICS" >&2
+        echo "Unknown SAILOVER_GRAPHICS: $SAILOVER_GRAPHICS" >&2
         exit 1
         ;;
 esac

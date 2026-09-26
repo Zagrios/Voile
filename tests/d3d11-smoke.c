@@ -15,10 +15,10 @@ int main(void)
     WNDCLASSW class = {
         .lpfnWndProc = DefWindowProcW,
         .hInstance = GetModuleHandleW(NULL),
-        .lpszClassName = L"ForgeSmoke",
+        .lpszClassName = L"SailOverSmoke",
     };
     RegisterClassW(&class);
-    HWND window = CreateWindowW(L"ForgeSmoke", L"Forge D3D11 smoke test",
+    HWND window = CreateWindowW(L"SailOverSmoke", L"SailOver D3D11 smoke test",
         WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 640, 360,
         NULL, NULL, class.hInstance, NULL);
 

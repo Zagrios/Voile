@@ -5,7 +5,7 @@ set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$RUNTIME/build"
 VERSION="${1:-}"
-NAME="forge-runtime-$VERSION"
+NAME="voile-$VERSION"
 MANIFEST="$WORK/package/$NAME/runtime.json"
 ARCHIVE="$WORK/release/$NAME.tar.xz"
 
@@ -23,7 +23,7 @@ value() {
 (cd "$WORK/release" && shasum -a 256 -c -s "$NAME.tar.xz.sha256") ||
     fail "$ARCHIVE does not match its checksum"
 cd "$RUNTIME"
-commit="$(value forge-runtime)"
+commit="$(value voile)"
 gh api "repos/{owner}/{repo}/commits/$commit" --silent 2>/dev/null ||
     fail "Push $commit before publishing it"
 # A tag that already exists, like the one that starts the Release workflow,
@@ -31,7 +31,7 @@ gh api "repos/{owner}/{repo}/commits/$commit" --silent 2>/dev/null ||
 if tagged="$(gh api "repos/{owner}/{repo}/commits/$VERSION" --jq .sha 2>/dev/null)"; then
     [[ "$tagged" == "$commit" ]] || fail "$VERSION is on $tagged, not on the packaged $commit"
 fi
-notes="CrossOver $(value crossover), Zagrios/forge-wine@$(value forge-wine),"
+notes="CrossOver $(value crossover), Zagrios/voile-wine@$(value voile-wine),"
 notes+=" ValveSoftware/Proton@$(value proton), D3DMetal from $(value d3dmetal)."
 gh release create "$VERSION" "$ARCHIVE" "$ARCHIVE.sha256" --target "$commit" \
     --title "$VERSION" --notes "$notes"
