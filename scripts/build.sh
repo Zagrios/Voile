@@ -346,6 +346,22 @@ build_steam_windows() {
     stamp steam-windows "$key"
 }
 
+# Wine Mono runs .NET games. mscoree finds the version it expects in the
+# runtime's data directory, so no prefix installs it. The stage is rebuilt with
+# Wine, so Mono goes back in after each Wine build.
+build_mono() {
+    local archive key
+    archive="$(fetch wine-mono)"
+    fetch wine-mono-license >/dev/null
+    key="$(field wine-mono sha256) $WINE_KEY"
+    current wine-mono "$key" && return
+    echo "==> Wine Mono"
+    rm -rf "$STAGE/share/wine/mono"
+    mkdir -p "$STAGE/share/wine/mono"
+    tar -xJf "$archive" -C "$STAGE/share/wine/mono"
+    stamp wine-mono "$key"
+}
+
 # D3DMetal stays out of the stage, which remains Wine's own: package.sh lays it
 # over the runtime unmodified, and wine-dev.sh and install-dev.sh over theirs.
 build_d3dmetal() {
@@ -368,6 +384,7 @@ build_gnutls
 build_wine
 build_steam
 build_steam_windows
+build_mono
 build_d3dmetal
 touch "$WORK/stamps"
 echo "Wine runtime: $STAGE"

@@ -32,7 +32,7 @@ A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The r
 ./scripts/publish.sh v26.3.0-1  # the GitHub release, tagged on the packaged commit
 ```
 
-`package.sh` refuses uncommitted changes, builds, and drops the debug information, which takes the runtime from about 1 GB to 400 MB. The archive holds one folder with the runtime, Valve's steamclient libraries in `steam/`, the licenses of what it ships in `licenses/`, and `runtime.json`, which names its CrossOver version and its voile, voile-wine and Proton commits. It also holds D3DMetal, laid in after stripping so it stays unmodified, with Apple's notices in `licenses/d3dmetal`. Before it finishes, the script extracts the archive and runs the 64-bit and 32-bit `cmd.exe` in a new prefix.
+`package.sh` refuses uncommitted changes, builds, and drops the debug information, which takes the runtime from about 1 GB to 400 MB. The archive holds one folder with the runtime, Valve's steamclient libraries in `steam/`, Wine Mono for .NET games in `share/wine/mono`, the licenses of what it ships in `licenses/`, and `runtime.json`, which names its CrossOver version and its voile, voile-wine and Proton commits. It also holds D3DMetal, laid in after stripping so it stays unmodified, with Apple's notices in `licenses/d3dmetal`. Before it finishes, the script extracts the archive and runs the 64-bit and 32-bit `cmd.exe` in a new prefix.
 
 `publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit.
 
@@ -42,7 +42,7 @@ Once the repositories are public, pushing a tag runs both scripts in the Release
 
 - A component that is a git repository and builds from source is a submodule, pinned by commit:
   - `wine` is [voile-wine](https://github.com/Zagrios/voile-wine): CrossOver's open-source Wine on its `crossover` branch, SailOver's changes as commits on `main`. Wine builds straight from this checkout, so a local edit rebuilds it. Its changes are commits there, never patches here.
-- `sources.json` pins every archive by URL and SHA-256: the CrossOver tarball for FreeType, GnuTLS and GMP, Nettle, Proton, Valve's steamclient libraries, D3DMetal and llvm-mingw. A mismatch stops the build.
+- `sources.json` pins every archive by URL and SHA-256: the CrossOver tarball for FreeType, GnuTLS and GMP, Nettle, Proton, Valve's steamclient libraries, Wine Mono and its license, D3DMetal and llvm-mingw. A mismatch stops the build.
 - `patches/<component>/NNNN-name.patch` files are applied in order onto the sources of an archived component, today Proton's `lsteamclient`. A patch that no longer applies stops the build.
 - Proton's `lsteamclient` and `steam_helper` keep their own licenses. They are downloaded at build time and never copied into this repository.
 

@@ -70,6 +70,7 @@ copy_licenses() {
     cp "$WORK/src/gnutls/gmp/COPYING.LESSERv3" "$licenses/gmp.txt"
     cp "$WORK/obj/nettle/COPYING.LESSERv3" "$licenses/nettle.txt"
     cp "$WORK/src-proton/lsteamclient/LICENSE" "$licenses/lsteamclient.txt"
+    cp "$(download wine-mono-license)" "$licenses/wine-mono.txt"
     tar -xzOf "$(download proton)" '*/LICENSE.proton' > "$licenses/steam_helper.txt"
 }
 
@@ -83,6 +84,7 @@ write_manifest() {
   "crossover": "$CROSSOVER",
   "voile-wine": "$(git -C "$RUNTIME/wine" rev-parse HEAD)",
   "proton": "$proton",
+  "wine-mono": "$(basename "$(field wine-mono url)" -x86.tar.xz | sed 's/^wine-mono-//')",
   "d3dmetal": "$(cat "$WORK/d3dmetal/VERSION")"
 }
 EOF

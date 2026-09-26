@@ -22,5 +22,13 @@
   "d3dmetal": {
     "url": "https://github.com/Zagrios/voile/releases/download/d3dmetal-4.0-beta2/d3dmetal-4.0-beta2.tar.xz",
     "sha256": "5ef3adc422b0c5b6958c2702afe6170e7e7b47680dce70194ff9dffdd40d2965"
+  },
+  "wine-mono": {
+    "url": "https://github.com/wine-mono/wine-mono/releases/download/wine-mono-10.4.1/wine-mono-10.4.1-x86.tar.xz",
+    "sha256": "a16606ef0724202e6a6848ece6e0cbba64d11e2f11aefe744af1d93c6d9f99bb"
+  },
+  "wine-mono-license": {
+    "url": "https://raw.githubusercontent.com/wine-mono/wine-mono/wine-mono-10.4.1/COPYING",
+    "sha256": "0265443ffc97c9450dbcf402c2430bf9fe87d7a6c92d5d7684fcecfe749bf75d"
   }
 }
