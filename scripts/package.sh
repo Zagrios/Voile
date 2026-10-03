@@ -1,6 +1,6 @@
 #!/bin/bash
-# Builds the runtime, then packages it the way a release publishes it:
-# build/release/voile-<version>.tar.xz and its SHA-256.
+# Builds the runtime and the Linux engine's runtime, then packages them the way a release publishes them:
+# build/release/voile-<version>.tar.xz, with the Linux engine's runtime in its linux folder, and its SHA-256.
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$RUNTIME/build"
@@ -37,6 +37,7 @@ for repository in "$RUNTIME" "$RUNTIME/wine"; do
 done
 
 "$RUNTIME/scripts/build.sh"
+"$RUNTIME/scripts/build-linux.sh"
 
 # The build keeps its debug information for development. Without it, the
 # runtime shrinks from about 1 GB to 400 MB. Mach-O files lose their debug map,
@@ -58,6 +59,17 @@ add_d3dmetal() {
     ditto "$WORK/d3dmetal/lib" "$PACKAGE/lib"
 }
 
+# The Linux engine's runtime: the engine, the render server and DXMT, Neptune's
+# DLLs for the prefix, voile-wine built for Linux and the Debian root. Wine's ELF
+# and PE files lose their debug information, which points into this build tree.
+add_linux() {
+    local linux="$PACKAGE/linux"
+    cp -cR "$WORK/linux/stage" "$linux"
+    rm -rf "$linux/wine/share/man"
+    find "$linux/wine/lib/wine" -type f \( -path '*-windows/*' -o -path '*-unix/*' \) -print0 |
+        xargs -0 -n 64 -P "$JOBS" "$STRIP" --strip-debug
+}
+
 # The licenses of everything the archive ships. Valve's steamclient libraries
 # come with none.
 copy_licenses() {
@@ -72,6 +84,12 @@ copy_licenses() {
     cp "$WORK/src-proton/lsteamclient/LICENSE" "$licenses/lsteamclient.txt"
     cp "$(download wine-mono-license)" "$licenses/wine-mono.txt"
     tar -xzOf "$(download proton)" '*/LICENSE.proton' > "$licenses/steam_helper.txt"
+    mkdir -p "$licenses/linux"
+    cp "$WORK"/linux/lkd/licenses/* "$WORK"/linux/neptune/licenses/* "$WORK"/linux/dxmt/licenses/* \
+        "$licenses/linux/"
+    cp "$WORK/linux/dxmt/SOURCE" "$licenses/linux/dxmt-source.txt"
+    # The Debian root: every package with its version and URL, which also locate its source package.
+    cp "$WORK"/linux/debian-root/lock*.json "$licenses/linux/"
 }
 
 write_manifest() {
@@ -85,13 +103,20 @@ write_manifest() {
   "voile-wine": "$(git -C "$RUNTIME/wine" rev-parse HEAD)",
   "proton": "$proton",
   "wine-mono": "$(basename "$(field wine-mono url)" -x86.tar.xz | sed 's/^wine-mono-//')",
-  "d3dmetal": "$(cat "$WORK/d3dmetal/VERSION")"
+  "d3dmetal": "$(cat "$WORK/d3dmetal/VERSION")",
+  "linux": {
+    "voile-lkd": "$(plutil -extract voile-lkd raw -o - "$WORK/linux/lkd/VERSION.json")",
+    "fex": "$(plutil -extract fex raw -o - "$WORK/linux/lkd/VERSION.json")",
+    "neptune": "$(plutil -extract neptune raw -o - "$WORK/linux/neptune/VERSION.json")",
+    "dxmt": "$(basename "$(field dxmt url)" .tar.xz)",
+    "debian-root": "$(basename "$(field debian-root url)" .tar.xz)"
+  }
 }
 EOF
 }
 
 # Extracted anywhere, the archive must create a prefix and run Windows programs
-# of both architectures.
+# of both architectures, and run one through the Linux engine.
 verify() {
     local root="$WORK/verify" output program
     rm -rf "$root"
@@ -104,6 +129,16 @@ verify() {
         [[ "$output" == *Windows* ]] || fail "$program did not run from the archive: $output"
     done
     env "$prefix" "$root/$NAME/bin/wineserver" -w
+    local linux="$root/$NAME/linux"
+    mkdir -p "$root/home"
+    output="$(FEXDARWIN_LKD=1 FEXDARWIN_ROOT="$linux/root" FEXDARWIN_ROOT_RO=1 \
+        FEXDARWIN_BIND="/opt/wine=$linux/wine:ro;/home/user=$root/home" \
+        "$linux/engine/run-with-timeout.sh" 600 "$linux/engine/fexdarwin-run" \
+        --env HOME=/home/user --env USER=user --env PATH=/opt/wine/bin:/usr/bin:/bin \
+        --env WINEPREFIX=/home/user/prefix --env WINEDEBUG=-all \
+        --env 'WINEDLLOVERRIDES=mscoree,mshtml=;winemenubuilder.exe=d' \
+        /bin/sh -c '/opt/wine/bin/wine cmd /c ver; /opt/wine/bin/wineserver -w' 2>/dev/null)" || true
+    [[ "$output" == *Windows* ]] || fail "cmd did not run through the Linux engine from the archive: $output"
     rm -rf "$root"
 }
 
@@ -116,6 +151,7 @@ mkdir "$PACKAGE/steam"
 cp "$WORK/steam-windows/steamclient.dll" "$WORK/steam-windows/steamclient64.dll" "$PACKAGE/steam/"
 strip_debug
 add_d3dmetal
+add_linux
 copy_licenses
 write_manifest
 COPYFILE_DISABLE=1 tar --create --xz --options xz:compression-level=9,xz:threads=0 \

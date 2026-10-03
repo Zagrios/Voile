@@ -41,13 +41,10 @@ built and published apart from the macOS one.
 ```sh
 ./scripts/build.sh                       # first: its Wine tools and llvm-mingw build the Linux Wine
 ./scripts/build-linux.sh                 # result in build/linux/stage
-./scripts/package-linux.sh v26.3.0-1     # build/release/voile-linux-v26.3.0-1.tar.xz, checked by running cmd
-./scripts/publish.sh v26.3.0-1           # after package.sh too: one release, both archives
 ```
 
-It ships in the same GitHub release as the Windows runtime, as a second archive,
-`voile-linux-<version>.tar.xz`: `publish.sh` publishes both, and SailOver downloads the Linux one into the release's
-`linux` folder only on the first launch that needs it. `install-dev.sh` installs a development build in
+It ships inside the release's archive, in its `linux` folder: `package.sh` builds it and lays it in, so one download
+holds both runtimes. `install-dev.sh` installs a development build in
 `<library>/Voile/current/linux` when it is built. A launch starts wsd and
 the render server (`RENDER_SERVER_EXEC_PATH=graphics/libexec/virgl_render_server`, `NPT_BACKEND=dxmt` and the DXMT
 library paths) under a supervisor, then `engine/fexdarwin-run` with `FEXDARWIN_LKD=1`, `FEXDARWIN_ROOT=root`
@@ -63,15 +60,14 @@ A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The r
 
 ```sh
 ./scripts/package.sh v26.3.0-1        # build/release/voile-v26.3.0-1.tar.xz and its .sha256
-./scripts/package-linux.sh v26.3.0-1  # build/release/voile-linux-v26.3.0-1.tar.xz and its .sha256
-./scripts/publish.sh v26.3.0-1        # the GitHub release with both archives, tagged on the packaged commit
+./scripts/publish.sh v26.3.0-1        # the GitHub release, tagged on the packaged commit
 ```
 
-`package.sh` refuses uncommitted changes, builds, and drops the debug information, which takes the runtime from about 1 GB to 400 MB. The archive holds one folder with the runtime, Valve's steamclient libraries in `steam/`, Wine Mono for .NET games in `share/wine/mono`, the licenses of what it ships in `licenses/`, and `runtime.json`, which names its CrossOver version and its voile, voile-wine and Proton commits. It also holds D3DMetal, laid in after stripping so it stays unmodified, with Apple's notices in `licenses/d3dmetal`. Before it finishes, the script extracts the archive and runs the 64-bit and 32-bit `cmd.exe` in a new prefix.
+`package.sh` refuses uncommitted changes, builds, and drops the debug information, which takes the runtime from about 1 GB to 400 MB. The archive holds one folder with the runtime, Valve's steamclient libraries in `steam/`, Wine Mono for .NET games in `share/wine/mono`, the licenses of what it ships in `licenses/`, and `runtime.json`, which names its CrossOver version and its voile, voile-wine and Proton commits. It also holds D3DMetal, laid in after stripping so it stays unmodified, with Apple's notices in `licenses/d3dmetal`, and the Linux engine's runtime in `linux/`, with its licenses in `licenses/linux` and its parts in `runtime.json`'s `linux`. Before it finishes, the script extracts the archive, runs the 64-bit and 32-bit `cmd.exe` in a new prefix, and runs `cmd` through the Linux engine.
 
-`publish.sh` needs the packaged commit pushed and both archives packaged from it. It creates the tag when it is missing and refuses one on another commit.
+`publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit.
 
-Once the repositories are public, pushing a tag runs both scripts in the Release workflow, on GitHub's `macos-26` runners, from a clean checkout. While they are private, the workflow skips itself: private repositories pay macOS minutes at ten times the Linux rate, and a full build outlasts the free ones.
+Once the repositories are public, pushing a tag runs `package.sh` and `publish.sh` in the Release workflow, on GitHub's `macos-26` runners, from a clean checkout. While they are private, the workflow skips itself: private repositories pay macOS minutes at ten times the Linux rate, and a full build outlasts the free ones.
 
 ## Inputs
 

@@ -32,7 +32,6 @@ jobs:
       - name: Build and package
         run: |
           ./scripts/package.sh "$GITHUB_REF_NAME"
-          ./scripts/package-linux.sh "$GITHUB_REF_NAME"
 
       - name: Publish
         env:
