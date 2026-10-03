@@ -27,7 +27,8 @@ jobs:
         run: |
           arch -x86_64 /usr/bin/true 2>/dev/null ||
             sudo softwareupdate --install-rosetta --agree-to-license
-          brew install bison meson ninja pkgconf
+          brew install bison cmake meson ninja pkgconf
+          python3 -m pip install --break-system-packages mako pyyaml
 
       - name: Build and package
         run: |

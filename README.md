@@ -8,7 +8,8 @@ Everything in this repository is licensed under the LGPL-2.1-or-later (see `LICE
 
 ```sh
 git clone --recursive https://github.com/Zagrios/voile.git
-brew install bison meson ninja pkgconf
+brew install bison cmake meson ninja pkgconf
+python3 -m pip install mako pyyaml   # Neptune's build (the Linux engine)
 ./scripts/build.sh              # result in build/stage
 ./scripts/wine-dev.sh winecfg   # runs it against build/prefix
 ```
@@ -33,9 +34,9 @@ built and published apart from the macOS one.
 | Part | Where it comes from |
 |---|---|
 | `wine/` | voile-wine (the `wine` submodule) cross-built for Linux by `build-linux.sh`, with zig and llvm-mingw. Its Linux-only drivers talk to wsd: `winesailover.drv` (display, input), `winesailaudio.drv` (audio), `nptunix` (Direct3D frames). |
-| `engine/` | `fexdarwin-run`, `wsd`, `wsdctl`, `run-with-timeout.sh` from voile-lkd (private), the `lkd` archive (`import-lkd.sh`). |
-| `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`) and DXMT, the `neptune` and `dxmt` archives (`import-neptune.sh`, `import-dxmt.sh`). |
-| `windows/` | Neptune's `d3d11.dll`, `dxgi.dll`, `d3d12.dll`, which a launch copies into the prefix (`WINEDLLOVERRIDES=d3d11,dxgi,d3d12=n`). |
+| `engine/` | `fexdarwin-run`, `wsd`, `wsdctl`, `run-with-timeout.sh` from voile-lkd (the private `voile-lkd` submodule), built by `build-linux.sh`. |
+| `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`), built from the private `neptune` submodule, and DXMT, the `dxmt` archive (`import-dxmt.sh`). |
+| `windows/` | Neptune's `d3d11.dll`, `dxgi.dll`, `d3d12.dll`, built from the `neptune` submodule, which a launch copies into the prefix (`WINEDLLOVERRIDES=d3d11,dxgi,d3d12=n`). |
 | `root/` | The Debian trixie amd64 root the guest runs on, the `debian-root` archive (`linux/root`, `import-debian-root.sh`). |
 
 ```sh
@@ -51,8 +52,10 @@ library paths) under a supervisor, then `engine/fexdarwin-run` with `FEXDARWIN_L
 read-only and binds for `/opt/wine`, the home with the prefix, the game and `/run/sailover` (wsd's socket folder).
 voile-lkd's `tools/dev/eac-run.py` and `docs/V1.md` describe a whole session.
 
-The `lkd`, `neptune`, `dxmt` and `debian-root` archives are imported like D3DMetal: each import script builds or
-packs its part into build/downloads and prints the release to publish and the checksum for `sources.json`.
+voile-lkd and Neptune build from their submodules like Wine, in their own checkouts, and lose their debug
+information on the way into the stage. The `dxmt` and `debian-root` archives, which this repository does not build, are imported like
+D3DMetal: each import script packs its part into build/downloads and prints the release to publish and the checksum
+for `sources.json`.
 
 ## Releases
 
@@ -73,6 +76,8 @@ Once the repositories are public, pushing a tag runs `package.sh` and `publish.s
 
 - A component that is a git repository and builds from source is a submodule, pinned by commit:
   - `wine` is [voile-wine](https://github.com/Zagrios/voile-wine): CrossOver's open-source Wine on its `crossover` branch, SailOver's changes as commits on `main`. Wine builds straight from this checkout, so a local edit rebuilds it. Its changes are commits there, never patches here.
+  - `voile-lkd` is [voile-lkd](https://github.com/Zagrios/voile-lkd), the Linux engine's host programs, with FEX as its own submodule.
+  - `neptune` is [Neptune](https://github.com/Zagrios/neptune), the Direct3D driver of the Linux engine and its render server.
 - `sources.json` pins every archive by URL and SHA-256: the CrossOver tarball for FreeType, GnuTLS and GMP, Nettle, Proton, Valve's steamclient libraries, Wine Mono and its license, D3DMetal and llvm-mingw. A mismatch stops the build.
 - `patches/<component>/NNNN-name.patch` files are applied in order onto the sources of an archived component, today Proton's `lsteamclient`. A patch that no longer applies stops the build.
 - Proton's `lsteamclient` and `steam_helper` keep their own licenses. They are downloaded at build time and never copied into this repository.

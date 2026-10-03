@@ -2,3 +2,11 @@
 	path = wine
 	url = https://github.com/Zagrios/voile-wine.git
 	branch = main
+[submodule "voile-lkd"]
+	path = voile-lkd
+	url = https://github.com/Zagrios/voile-lkd.git
+	branch = main
+[submodule "neptune"]
+	path = neptune
+	url = https://github.com/Zagrios/neptune.git
+	branch = main

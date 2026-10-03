@@ -1,11 +1,14 @@
 #!/bin/bash
-# Builds the Linux engine runtime: voile-wine for x86-64 Linux, which the engine (voile-lkd) runs on macOS arm64,
-# beside the pinned engine, Debian root, Neptune and DXMT archives of sources.json. Run build.sh first: the Linux
-# build reuses the Wine build tools of the macOS build and its llvm-mingw. Each step reruns only when its inputs
-# change. Result: build/linux/stage.
+# Builds the Linux engine runtime: voile-wine for x86-64 Linux, which the engine runs on macOS arm64, the engine
+# itself (the voile-lkd submodule) and Neptune (the neptune submodule), beside the pinned DXMT and Debian root
+# archives of sources.json. Run build.sh first: the Linux build reuses the Wine build tools of the macOS build and its
+# llvm-mingw. voile-lkd needs cmake, Neptune meson and Python with Mako and PyYAML, all from the caller's PATH. Each
+# step reruns only when its inputs change. Result: build/linux/stage.
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
 WINE_SOURCES="$RUNTIME/wine"
+LKD_SOURCES="$RUNTIME/voile-lkd"
+NEPTUNE_SOURCES="$RUNTIME/neptune"
 WORK="$RUNTIME/build"
 DOWNLOADS="$WORK/downloads"
 LINUX="$WORK/linux"
@@ -19,6 +22,8 @@ WINE_TOOLS="$WORK/obj/wine"
 # At most 4 jobs: the Linux engine work keeps this rule for the whole machine.
 JOBS=4
 TARGET=x86_64-linux-gnu.2.36
+# voile-lkd and Neptune build with the caller's tools; Wine with these only.
+CALLER_PATH="$PATH"
 export PATH="/opt/homebrew/opt/bison/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin"
 export ZIG_GLOBAL_CACHE_DIR="$LINUX/zig-cache" ZIG_LOCAL_CACHE_DIR="$LINUX/zig-cache-local"
 # What the guest Wine does without: no X11, no system audio or Vulkan (wsd, winesailaudio and Neptune replace them).
@@ -55,6 +60,12 @@ fetch() {
     echo "$file"
 }
 
+# A checkout's commit, and a digest of its uncommitted changes and nested submodules: a local edit rebuilds it.
+tree_key() {
+    printf '%s-%s' "$(git -C "$1" rev-parse HEAD)" \
+        "$({ git -C "$1" diff HEAD; git -C "$1" submodule status --recursive; } | shasum -a 256 | cut -c1-16)"
+}
+
 current() {
     [[ -f "$LINUX/stamps/$1" && "$(cat "$LINUX/stamps/$1")" == "$2" ]]
 }
@@ -65,6 +76,8 @@ stamp() {
 }
 
 [[ -f "$WINE_SOURCES/configure" ]] || fail "The wine submodule is missing: git submodule update --init"
+[[ -f "$LKD_SOURCES/fex/CMakeLists.txt" && -f "$NEPTUNE_SOURCES/scripts/build-server.sh" ]] ||
+    fail "The voile-lkd and neptune submodules are missing: git submodule update --init --recursive"
 [[ -x "$WINE_TOOLS/tools/winebuild/winebuild" && -x "$MINGW/bin/ld.lld" ]] ||
     fail "Build the macOS runtime first (./scripts/build.sh): its Wine tools and llvm-mingw build this one"
 
@@ -114,10 +127,10 @@ WRAPPER
     stamp zig "$key"
 }
 
-# The pinned archives of the private and binary parts: the engine, Neptune, DXMT, the Debian root.
+# The pinned archives of the parts this repository does not build: DXMT, the Debian root.
 build_archives() {
     local name archive key
-    for name in lkd neptune dxmt debian-root; do
+    for name in dxmt debian-root; do
         archive="$(fetch "$name")"
         key="$(field "$name" sha256)"
         current "$name" "$key" && continue
@@ -183,6 +196,74 @@ build_wine() {
     stamp wine "$key"
 }
 
+# The engine's host programs: fexdarwin-run (FEXCore and LKD), the window server (wsd, wsdctl) and the supervisor
+# wrapper, without their debug information, which points into the build tree.
+build_lkd() {
+    local key out="$LINUX/lkd" binary notice
+    key="$(tree_key "$LKD_SOURCES")"
+    current lkd "$key" && return
+    echo "==> voile-lkd $(git -C "$LKD_SOURCES" rev-parse --short=12 HEAD)"
+    PATH="$CALLER_PATH" JOBS="$JOBS" nice -n 10 "$LKD_SOURCES/build.sh"
+    rm -rf "$out"
+    mkdir -p "$out/bin" "$out/licenses"
+    cp "$LKD_SOURCES/fexdarwin/build/host/fexdarwin-run" "$LKD_SOURCES/wsd/bin/wsd" "$LKD_SOURCES/wsd/bin/wsdctl" \
+        "$LKD_SOURCES/fexdarwin/scripts/run-with-timeout.sh" "$out/bin/"
+    for binary in fexdarwin-run wsd wsdctl; do
+        codesign --remove-signature "$out/bin/$binary" 2>/dev/null || true
+        strip -S "$out/bin/$binary"
+        codesign --sign - "$out/bin/$binary"
+    done
+    cp "$LKD_SOURCES/LICENSE" "$out/licenses/voile-lkd.txt"
+    {
+        cat "$LKD_SOURCES/NOTICE"
+        for notice in "$LKD_SOURCES"/lkd/NOTICE "$LKD_SOURCES"/lkd/src/*/NOTICE; do
+            [[ -f "$notice" ]] && printf '\n----- %s\n' "${notice#"$LKD_SOURCES"/}" && cat "$notice"
+        done
+    } > "$out/licenses/voile-lkd-notices.txt"
+    cp "$LKD_SOURCES/fex/LICENSE" "$out/licenses/fex.txt"
+    printf '{\n  "voile-lkd": "%s",\n  "fex": "%s"\n}\n' "$(git -C "$LKD_SOURCES" rev-parse HEAD)" \
+        "$(git -C "$LKD_SOURCES/fex" rev-parse HEAD)" > "$out/VERSION.json"
+    stamp lkd "$key"
+}
+
+# Neptune: the guest driver (d3d11.dll, dxgi.dll, d3d12.dll for the prefix) and the macOS render server with its
+# libraries, relinked to find each other through @rpath. The render server needs
+# RENDER_SERVER_EXEC_PATH=graphics/libexec/virgl_render_server at run time. They lose their debug information.
+build_neptune() {
+    local key out="$LINUX/neptune" prefix="$NEPTUNE_SOURCES/build/prefix" binary
+    key="$(tree_key "$NEPTUNE_SOURCES")"
+    current neptune "$key" && return
+    echo "==> Neptune $(git -C "$NEPTUNE_SOURCES" rev-parse --short=12 HEAD)"
+    PATH="$CALLER_PATH" LLVM_MINGW="$MINGW" JOBS="$JOBS" nice -n 10 "$NEPTUNE_SOURCES/scripts/build-client.sh"
+    PATH="$CALLER_PATH" JOBS="$JOBS" nice -n 10 "$NEPTUNE_SOURCES/scripts/build-server.sh"
+    rm -rf "$out"
+    mkdir -p "$out/windows" "$out/graphics/bin" "$out/graphics/libexec" "$out/graphics/lib" "$out/licenses"
+    cp "$NEPTUNE_SOURCES"/build/client/src/virtio/neptune/{d3d11,dxgi,d3d12}.dll "$out/windows/"
+    "$MINGW/bin/llvm-strip" --strip-debug "$out"/windows/*.dll
+    cp "$prefix/bin/virgl_test_server" "$out/graphics/bin/"
+    cp "$prefix/libexec/virgl_render_server" "$out/graphics/libexec/"
+    cp "$prefix/lib/libvirglrenderer.1.dylib" "$prefix/lib/libepoxy.0.dylib" "$out/graphics/lib/"
+    # The build links by absolute path into its prefix: relink through @rpath.
+    install_name_tool -id @rpath/libepoxy.0.dylib "$out/graphics/lib/libepoxy.0.dylib"
+    install_name_tool -id @rpath/libvirglrenderer.1.dylib \
+        -change "$prefix/lib/libepoxy.0.dylib" @rpath/libepoxy.0.dylib \
+        -add_rpath @loader_path "$out/graphics/lib/libvirglrenderer.1.dylib"
+    install_name_tool -change "$prefix/lib/libvirglrenderer.1.dylib" @rpath/libvirglrenderer.1.dylib \
+        -add_rpath @executable_path/../lib "$out/graphics/bin/virgl_test_server"
+    for binary in "$out"/graphics/bin/* "$out"/graphics/libexec/* "$out"/graphics/lib/*; do
+        codesign --remove-signature "$binary" 2>/dev/null || true
+        strip -S "$binary"
+        codesign --sign - "$binary"
+    done
+    ! otool -L "$out"/graphics/bin/* "$out"/graphics/lib/* | grep -q "$NEPTUNE_SOURCES" ||
+        fail "a Neptune library still points into its build tree"
+    cp "$NEPTUNE_SOURCES/mesa/docs/license.rst" "$out/licenses/mesa.rst"
+    cp "$NEPTUNE_SOURCES/virglrenderer/COPYING" "$out/licenses/virglrenderer.txt"
+    cp "$NEPTUNE_SOURCES"/build/dl/libepoxy-1.5.10/COPYING "$out/licenses/libepoxy.txt"
+    printf '{\n  "neptune": "%s"\n}\n' "$(git -C "$NEPTUNE_SOURCES" rev-parse HEAD)" > "$out/VERSION.json"
+    stamp neptune "$key"
+}
+
 # The runtime's layout: engine/ (host programs), graphics/ (render server, DXMT), windows/ (Neptune's DLLs for the
 # prefix), wine/ (voile-wine for Linux), root/ (the Debian root).
 build_stage() {
@@ -201,6 +282,8 @@ build_stage() {
 
 build_zig
 build_archives
+build_lkd
+build_neptune
 build_sysroot
 build_wine
 build_stage

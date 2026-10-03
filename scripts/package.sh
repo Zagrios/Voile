@@ -32,7 +32,7 @@ CROSSOVER="$(basename "$(field crossover url)" .tar.gz)"
 CROSSOVER="${CROSSOVER#crossover-sources-}"
 [[ "$VERSION" == "v$CROSSOVER-"* ]] || fail "$VERSION does not match CrossOver $CROSSOVER in sources.json"
 # runtime.json names commits, so the archive must hold exactly what they contain.
-for repository in "$RUNTIME" "$RUNTIME/wine"; do
+for repository in "$RUNTIME" "$RUNTIME/wine" "$RUNTIME/voile-lkd" "$RUNTIME/neptune"; do
     [[ -z "$(git -C "$repository" status --porcelain)" ]] || fail "$repository has uncommitted changes"
 done
 
