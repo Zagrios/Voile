@@ -30,7 +30,9 @@ jobs:
           brew install bison meson ninja pkgconf
 
       - name: Build and package
-        run: ./scripts/package.sh "$GITHUB_REF_NAME"
+        run: |
+          ./scripts/package.sh "$GITHUB_REF_NAME"
+          ./scripts/package-linux.sh "$GITHUB_REF_NAME"
 
       - name: Publish
         env:
