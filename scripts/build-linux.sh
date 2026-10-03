@@ -151,10 +151,15 @@ build_sysroot() {
     stamp sysroot "$key"
 }
 
+# The engine's host pages are 16 KiB and the guest's 4 KiB: code and often-written data that share a 16 KiB page make
+# every store fault and drop the code's translations (nptunix.so: about 19,000 faults a second in Rocket League). Each
+# PT_LOAD of a Linux library and of the loader starts on its own 16 KiB page.
+WINE_UNIX_LDFLAGS="-Wl,-z,max-page-size=16384"
+
 build_wine() {
     local source_key key
     source_key="$(git -C "$WINE_SOURCES" rev-parse HEAD)-$(git -C "$WINE_SOURCES" diff HEAD | shasum -a 256 | cut -c1-16)"
-    key="$source_key $(field zig sha256) $(cat "$LINUX/stamps/sysroot") ${WINE_OPTIONS[*]}"
+    key="$source_key $(field zig sha256) $(cat "$LINUX/stamps/sysroot") ${WINE_OPTIONS[*]} $WINE_UNIX_LDFLAGS"
     current wine "$key" && return
     echo "==> Wine for Linux $(git -C "$WINE_SOURCES" rev-parse --short=12 HEAD)"
     rm -rf "$OBJECTS" "$STAGE/wine"
@@ -163,7 +168,7 @@ build_wine() {
         cd "$OBJECTS"
         export PATH="$TOOLS/bin:$MINGW/bin:$PATH"
         "$WINE_SOURCES/configure" --host=x86_64-linux-gnu --with-wine-tools="$WINE_TOOLS" --prefix=/opt/wine \
-            "${WINE_OPTIONS[@]}" \
+            "${WINE_OPTIONS[@]}" LDFLAGS="$WINE_UNIX_LDFLAGS" \
             FREETYPE_CFLAGS="-I$SYSROOT/usr/include/freetype2" \
             FREETYPE_LIBS="-L$SYSROOT/usr/lib/x86_64-linux-gnu -lfreetype -Wl,--allow-shlib-undefined" \
             GNUTLS_CFLAGS="-I$SYSROOT/usr/include" \
