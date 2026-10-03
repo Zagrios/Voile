@@ -48,8 +48,8 @@
     "sha256": "63574294f3831673adf3928e19c9211a0fd258b03ef81ca831b24587dbaa5f4d"
   },
   "lkd": {
-    "url": "https://github.com/Zagrios/voile/releases/download/lkd-41ed6394f79e/lkd-41ed6394f79e.tar.xz",
-    "sha256": "7e57a2e5a080628c70ecb8d13ed8e7b4870bc4eb9c50958ce57f568c8238279e"
+    "url": "https://github.com/Zagrios/voile/releases/download/lkd-7e1c1b55726b/lkd-7e1c1b55726b.tar.xz",
+    "sha256": "18dfac743d3d6eee425e13e9180fe44db13d12770a0bdc405b1e77ade32deb87"
   },
   "neptune": {
     "url": "https://github.com/Zagrios/voile/releases/download/neptune-f8730f930475/neptune-f8730f930475.tar.xz",
