@@ -30,5 +30,33 @@
   "wine-mono-license": {
     "url": "https://raw.githubusercontent.com/wine-mono/wine-mono/wine-mono-10.4.1/COPYING",
     "sha256": "0265443ffc97c9450dbcf402c2430bf9fe87d7a6c92d5d7684fcecfe749bf75d"
+  },
+  "zig": {
+    "url": "https://ziglang.org/download/0.16.0/zig-aarch64-macos-0.16.0.tar.xz",
+    "sha256": "b23d70deaa879b5c2d486ed3316f7eaa53e84acf6fc9cc747de152450d401489"
+  },
+  "debian-freetype-dev": {
+    "url": "https://deb.debian.org/debian/pool/main/f/freetype/libfreetype-dev_2.13.3+dfsg-1+deb13u1_amd64.deb",
+    "sha256": "f58107859d9fa44206e64cf35bdbd4febdec66a33e456ce2e5e3712f01b6c895"
+  },
+  "debian-gnutls-dev": {
+    "url": "https://deb.debian.org/debian/pool/main/g/gnutls28/libgnutls28-dev_3.8.9-3+deb13u4_amd64.deb",
+    "sha256": "f7048cead574f6142449a3b4089b042a42372a6b76d900324156ae97dbeb08ed"
+  },
+  "debian-root": {
+    "url": "https://github.com/Zagrios/voile/releases/download/debian-root-trixie-20260928/debian-root-trixie-20260928.tar.xz",
+    "sha256": "63574294f3831673adf3928e19c9211a0fd258b03ef81ca831b24587dbaa5f4d"
+  },
+  "lkd": {
+    "url": "https://github.com/Zagrios/voile/releases/download/lkd-8a281064e874/lkd-8a281064e874.tar.xz",
+    "sha256": "d28e1bbc8ce642fe240fe9bee442db790f91699904ef67ff3cec1216fe3b8e98"
+  },
+  "neptune": {
+    "url": "https://github.com/Zagrios/voile/releases/download/neptune-72552e62e681/neptune-72552e62e681.tar.xz",
+    "sha256": "350f0243237020f7542de316734c5d2e71eeabc2f6a72b5c442e2a512264d76b"
+  },
+  "dxmt": {
+    "url": "https://github.com/Zagrios/voile/releases/download/dxmt-bcdcf6da89af/dxmt-bcdcf6da89af.tar.xz",
+    "sha256": "a5f8d8e40eced00b9a85ff99c75c6e76d37e42d03c1e3fa07e74ef804e0ed8db"
   }
 }

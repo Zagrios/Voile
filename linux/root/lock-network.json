@@ -1,0 +1,45 @@
+{
+  "seeds": [
+    "libc-bin",
+    "curl",
+    "ca-certificates"
+  ],
+  "packages": [
+    {
+      "name": "ca-certificates",
+      "version": "20250419",
+      "url": "https://deb.debian.org/debian/pool/main/c/ca-certificates/ca-certificates_20250419_all.deb",
+      "sha256": "ef590f89563aa4b46c8260d49d1cea0fc1b181d19e8df3782694706adf05c184",
+      "size": 161704,
+      "installed_kib": 390,
+      "architecture": "all"
+    },
+    {
+      "name": "curl",
+      "version": "8.14.1-2+deb13u5",
+      "url": "https://deb.debian.org/debian/pool/main/c/curl/curl_8.14.1-2+deb13u5_amd64.deb",
+      "sha256": "ebb7e0cbe30ad23bce0d28a848ccfeb9b73b82817eb4fe12fa20d2845f62dc73",
+      "size": 270064,
+      "installed_kib": 495,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libc-bin",
+      "version": "2.41-12+deb13u4",
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/libc-bin_2.41-12+deb13u4_amd64.deb",
+      "sha256": "dc8c79647fe3a5f37f72a400414f70263d0212f010ff2c09f990e30d91e38d1c",
+      "size": 638452,
+      "installed_kib": 2122,
+      "architecture": "amd64"
+    },
+    {
+      "name": "openssl",
+      "version": "3.5.7-1~deb13u2",
+      "url": "https://deb.debian.org/debian/pool/main/o/openssl/openssl_3.5.7-1~deb13u2_amd64.deb",
+      "sha256": "4ff006f431d8c2e69fa736885a3b6e779f2448535f69dbde821d9f0ff87ad8ea",
+      "size": 1507300,
+      "installed_kib": 2510,
+      "architecture": "amd64"
+    }
+  ]
+}

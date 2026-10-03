@@ -23,6 +23,36 @@ To launch Windows Steam games from a development build of SailOver, install the 
 
 A `winedebug` file at the root of an installed runtime replaces SailOver's default Wine debug channels, for example `err+all,+steamclient`. SailOver writes Wine's output to `~/Library/Logs/SailOver/Steam/wine-<appid>.log`.
 
+## The Linux engine
+
+Games whose anti-cheat supports Linux (Easy Anti-Cheat on Rocket League) run through voile-wine built for x86-64
+**Linux**, which voile-lkd's engine runs in native macOS arm64 processes: FEXCore translates the x86-64 code and
+LKD serves the Linux system calls, with no virtual machine. The anti-cheat loads its Linux module. This runtime is
+built and published apart from the macOS one.
+
+| Part | Where it comes from |
+|---|---|
+| `wine/` | voile-wine (the `wine` submodule) cross-built for Linux by `build-linux.sh`, with zig and llvm-mingw. Its Linux-only drivers talk to wsd: `winesailover.drv` (display, input), `winesailaudio.drv` (audio), `nptunix` (Direct3D frames). |
+| `engine/` | `fexdarwin-run`, `wsd`, `wsdctl`, `run-with-timeout.sh` from voile-lkd (private), the `lkd` archive (`import-lkd.sh`). |
+| `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`) and DXMT, the `neptune` and `dxmt` archives (`import-neptune.sh`, `import-dxmt.sh`). |
+| `windows/` | Neptune's `d3d11.dll`, `dxgi.dll`, `d3d12.dll`, which a launch copies into the prefix (`WINEDLLOVERRIDES=d3d11,dxgi,d3d12=n`). |
+| `root/` | The Debian trixie amd64 root the guest runs on, the `debian-root` archive (`linux/root`, `import-debian-root.sh`). |
+
+```sh
+./scripts/build.sh                       # first: its Wine tools and llvm-mingw build the Linux Wine
+./scripts/build-linux.sh                 # result in build/linux/stage
+./scripts/package-linux.sh v26.3.0-1     # build/release/voile-linux-v26.3.0-1.tar.xz, checked by running cmd
+```
+
+`install-dev.sh` installs it in SailOver's `<library>/Voile/linux-current` when it is built. A launch starts wsd and
+the render server (`RENDER_SERVER_EXEC_PATH=graphics/libexec/virgl_render_server`, `NPT_BACKEND=dxmt` and the DXMT
+library paths) under a supervisor, then `engine/fexdarwin-run` with `FEXDARWIN_LKD=1`, `FEXDARWIN_ROOT=root`
+read-only and binds for `/opt/wine`, the home with the prefix, the game and `/run/sailover` (wsd's socket folder).
+voile-lkd's `tools/dev/eac-run.py` and `docs/V1.md` describe a whole session.
+
+The `lkd`, `neptune`, `dxmt` and `debian-root` archives are imported like D3DMetal: each import script builds or
+packs its part into build/downloads and prints the release to publish and the checksum for `sources.json`.
+
 ## Releases
 
 A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The revision counts the releases built on one CrossOver version.

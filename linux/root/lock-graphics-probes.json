@@ -1,0 +1,235 @@
+{
+  "seeds": [
+    "mesa-vulkan-drivers",
+    "vulkan-tools",
+    "mesa-utils",
+    "x11-utils"
+  ],
+  "packages": [
+    {
+      "name": "libdecor-0-0",
+      "version": "0.2.2-2",
+      "url": "https://deb.debian.org/debian/pool/main/libd/libdecor-0/libdecor-0-0_0.2.2-2_amd64.deb",
+      "sha256": "e4f228a9d4a38af23fab00f8e20219790b567e2e1f7804b3a215a26294350f82",
+      "size": 15540,
+      "installed_kib": 62,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libgles2",
+      "version": "1.7.0-1+b2",
+      "url": "https://deb.debian.org/debian/pool/main/libg/libglvnd/libgles2_1.7.0-1+b2_amd64.deb",
+      "sha256": "e12c18aa77939d122ee1dea520ba0440b97dc19200b7396e03dff03a3ece74c1",
+      "size": 17256,
+      "installed_kib": 106,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libice6",
+      "version": "2:1.1.1-1",
+      "url": "https://deb.debian.org/debian/pool/main/libi/libice/libice6_1.1.1-1_amd64.deb",
+      "sha256": "38185997162793b5dfb768644badc57852879784a2f9d83c6c4e47efa5e36698",
+      "size": 65376,
+      "installed_kib": 142,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libsm6",
+      "version": "2:1.2.6-1",
+      "url": "https://deb.debian.org/debian/pool/main/libs/libsm/libsm6_1.2.6-1_amd64.deb",
+      "sha256": "03038b3002e6f44322554e335d60d8ff87acfcf2e21c904b6866610a9913ee00",
+      "size": 37264,
+      "installed_kib": 74,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libuuid1",
+      "version": "2.41.5-0+deb13u1",
+      "url": "https://deb.debian.org/debian/pool/main/u/util-linux/libuuid1_2.41.5-0+deb13u1_amd64.deb",
+      "sha256": "c1bf4c4c3ff48c57fabf93307dfb56996b60cfa33927afc4158b5db36fb2721e",
+      "size": 37848,
+      "installed_kib": 98,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxaw7",
+      "version": "2:1.0.16-1",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxaw/libxaw7_1.0.16-1_amd64.deb",
+      "sha256": "e79f3ab51ecbbfd3414a0568a8947ac59a29c30d631e6c7b6e07ea46e688c047",
+      "size": 211848,
+      "installed_kib": 534,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxcb-shape0",
+      "version": "1.17.0-2+b1",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-shape0_1.17.0-2+b1_amd64.deb",
+      "sha256": "eb94a643d66714929053e78ff8f38a90ce8af4ed854e3cbca0b14f8bbccc7bfc",
+      "size": 105624,
+      "installed_kib": 128,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxcb-xkb1",
+      "version": "1.17.0-2+b1",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxcb/libxcb-xkb1_1.17.0-2+b1_amd64.deb",
+      "sha256": "a46b8d860fbff32c8021dac6036d83859c24ad8700cd1b977cda116d37a2dd35",
+      "size": 129972,
+      "installed_kib": 252,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxft2",
+      "version": "2.3.6-1+b4",
+      "url": "https://deb.debian.org/debian/pool/main/x/xft/libxft2_2.3.6-1+b4_amd64.deb",
+      "sha256": "0226da7b9186ab7a9f78efcbbefa7ce3b3b398745e1909e124a3d58471fa0edc",
+      "size": 54516,
+      "installed_kib": 131,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxkbcommon-x11-0",
+      "version": "1.7.0-2",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxkbcommon/libxkbcommon-x11-0_1.7.0-2_amd64.deb",
+      "sha256": "b5cff6287d0d90b66224edfb7208709c5d35511215d87d2836919e4f7d367653",
+      "size": 16184,
+      "installed_kib": 57,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxkbfile1",
+      "version": "1:1.1.0-1+b4",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxkbfile/libxkbfile1_1.1.0-1+b4_amd64.deb",
+      "sha256": "989b61e0eb7f1f99d0e969a5957e9a857a95941d5c0e86d5e2b502008b4ac28e",
+      "size": 76516,
+      "installed_kib": 187,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxmu6",
+      "version": "2:1.1.3-3+b4",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxmu/libxmu6_1.1.3-3+b4_amd64.deb",
+      "sha256": "cfdf1dee8f9abd87f503222fc8b04a30ce820fb1255247b7c3a28ff9c244431a",
+      "size": 58972,
+      "installed_kib": 139,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxmuu1",
+      "version": "2:1.1.3-3+b4",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxmu/libxmuu1_1.1.3-3+b4_amd64.deb",
+      "sha256": "6b5f537905421599e962a8cec68c84f06d506e143fc70b0b570380b3c4901678",
+      "size": 21896,
+      "installed_kib": 53,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxt6t64",
+      "version": "1:1.2.1-1.2+b2",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxt/libxt6t64_1.2.1-1.2+b2_amd64.deb",
+      "sha256": "a1f4557c03113681ee24863495adc244cecec95fe3ab7256ce76e87320157300",
+      "size": 188232,
+      "installed_kib": 490,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxtst6",
+      "version": "2:1.2.5-1",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxtst/libxtst6_1.2.5-1_amd64.deb",
+      "sha256": "4f254f80b8984203474745d6428e8c2de2148f19b37aa01a601dbe9ac03196eb",
+      "size": 25756,
+      "installed_kib": 59,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxv1",
+      "version": "2:1.0.11-1.1+b3",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxv/libxv1_1.0.11-1.1+b3_amd64.deb",
+      "sha256": "e19f6bdcd20c1c28fefea29f0a95c33232dd5f0d26e0079675ac8ba4af4eda07",
+      "size": 23356,
+      "installed_kib": 52,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libxxf86dga1",
+      "version": "2:1.1.5-1+b3",
+      "url": "https://deb.debian.org/debian/pool/main/libx/libxxf86dga/libxxf86dga1_1.1.5-1+b3_amd64.deb",
+      "sha256": "5585791fed815875b6d9cfbcd48a4df454472696c5b1b6d4240b6c53d80d75b2",
+      "size": 20780,
+      "installed_kib": 52,
+      "architecture": "amd64"
+    },
+    {
+      "name": "lsb-base",
+      "version": "11.6",
+      "url": "https://deb.debian.org/debian/pool/main/l/lsb/lsb-base_11.6_all.deb",
+      "sha256": "f8bedd167280e76636df3a1bc023cd2906d458916c1af4c1d7912c5b971fc642",
+      "size": 4584,
+      "installed_kib": 12,
+      "architecture": "all"
+    },
+    {
+      "name": "mesa-utils",
+      "version": "9.0.0-2+b2",
+      "url": "https://deb.debian.org/debian/pool/main/m/mesa-demos/mesa-utils_9.0.0-2+b2_amd64.deb",
+      "sha256": "c2566e84a65e630745a4341518ba40e03d903157a0a54bfcaf563954df1c125d",
+      "size": 953328,
+      "installed_kib": 2151,
+      "architecture": "amd64"
+    },
+    {
+      "name": "mesa-utils-bin",
+      "version": "9.0.0-2+b2",
+      "url": "https://deb.debian.org/debian/pool/main/m/mesa-demos/mesa-utils-bin_9.0.0-2+b2_amd64.deb",
+      "sha256": "26ab6bf7ff781cb903a6b1b3518a1926a799024289853cc3693ee0dd922e1e13",
+      "size": 158032,
+      "installed_kib": 988,
+      "architecture": "amd64"
+    },
+    {
+      "name": "mesa-vulkan-drivers",
+      "version": "25.0.7-2+deb13u1",
+      "url": "https://deb.debian.org/debian/pool/main/m/mesa/mesa-vulkan-drivers_25.0.7-2+deb13u1_amd64.deb",
+      "sha256": "caf2f7d296b7522efe74e40a74bce762a3ce84c33b53b5e54e1248ac2e0a13a5",
+      "size": 14185752,
+      "installed_kib": 81104,
+      "architecture": "amd64"
+    },
+    {
+      "name": "sysvinit-utils",
+      "version": "3.14-4",
+      "url": "https://deb.debian.org/debian/pool/main/s/sysvinit/sysvinit-utils_3.14-4_amd64.deb",
+      "sha256": "c7e957360dff89675b491e501b00047cf750695178cabab167c92fc260d358ec",
+      "size": 34060,
+      "installed_kib": 104,
+      "architecture": "amd64"
+    },
+    {
+      "name": "vulkan-tools",
+      "version": "1.4.304.0+dfsg1-1",
+      "url": "https://deb.debian.org/debian/pool/main/v/vulkan-tools/vulkan-tools_1.4.304.0+dfsg1-1_amd64.deb",
+      "sha256": "742d1cd78c333a94b8214e21ba455d47884dc32f110016ffe6998cf88f2a2f94",
+      "size": 304412,
+      "installed_kib": 1608,
+      "architecture": "amd64"
+    },
+    {
+      "name": "x11-common",
+      "version": "1:7.7+24+deb13u1",
+      "url": "https://deb.debian.org/debian/pool/main/x/xorg/x11-common_7.7+24+deb13u1_all.deb",
+      "sha256": "57a981938506b26dc552f19cafeaa8c04e9b59dc7508509151f8507a9d4e5f24",
+      "size": 216864,
+      "installed_kib": 275,
+      "architecture": "all"
+    },
+    {
+      "name": "x11-utils",
+      "version": "7.7+7",
+      "url": "https://deb.debian.org/debian/pool/main/x/x11-utils/x11-utils_7.7+7_amd64.deb",
+      "sha256": "239d8a87b464cbe370d63029820218a52c5bfa1f0dfeb74f7cfe7d0df017046b",
+      "size": 181524,
+      "installed_kib": 651,
+      "architecture": "amd64"
+    }
+  ]
+}
