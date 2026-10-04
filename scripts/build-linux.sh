@@ -196,8 +196,9 @@ build_wine() {
     stamp wine "$key"
 }
 
-# The engine's host programs: fexdarwin-run (FEXCore and LKD), the window server (wsd, wsdctl) and the supervisor
-# wrapper, without their debug information, which points into the build tree.
+# The engine's host programs: fexdarwin-run (FEXCore and LKD), the window server (wsd, wsdctl), the input service
+# (sailover-input, with SDL3 inside) and the supervisor wrapper, without their debug information, which points into
+# the build tree.
 build_lkd() {
     local key out="$LINUX/lkd" binary notice
     key="$(tree_key "$LKD_SOURCES")"
@@ -207,8 +208,8 @@ build_lkd() {
     rm -rf "$out"
     mkdir -p "$out/bin" "$out/licenses"
     cp "$LKD_SOURCES/fexdarwin/build/host/fexdarwin-run" "$LKD_SOURCES/wsd/bin/wsd" "$LKD_SOURCES/wsd/bin/wsdctl" \
-        "$LKD_SOURCES/fexdarwin/scripts/run-with-timeout.sh" "$out/bin/"
-    for binary in fexdarwin-run wsd wsdctl; do
+        "$LKD_SOURCES/input/bin/sailover-input" "$LKD_SOURCES/fexdarwin/scripts/run-with-timeout.sh" "$out/bin/"
+    for binary in fexdarwin-run wsd wsdctl sailover-input; do
         codesign --remove-signature "$out/bin/$binary" 2>/dev/null || true
         strip -S "$out/bin/$binary"
         codesign --sign - "$out/bin/$binary"
@@ -221,6 +222,7 @@ build_lkd() {
         done
     } > "$out/licenses/voile-lkd-notices.txt"
     cp "$LKD_SOURCES/fex/LICENSE" "$out/licenses/fex.txt"
+    cp "$LKD_SOURCES/input/bin/SDL3-LICENSE.txt" "$out/licenses/sdl3.txt"
     printf '{\n  "voile-lkd": "%s",\n  "fex": "%s"\n}\n' "$(git -C "$LKD_SOURCES" rev-parse HEAD)" \
         "$(git -C "$LKD_SOURCES/fex" rev-parse HEAD)" > "$out/VERSION.json"
     stamp lkd "$key"
