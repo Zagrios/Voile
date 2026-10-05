@@ -26,7 +26,7 @@ TARGET=x86_64-linux-gnu.2.36
 CALLER_PATH="$PATH"
 export PATH="/opt/homebrew/opt/bison/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin"
 export ZIG_GLOBAL_CACHE_DIR="$LINUX/zig-cache" ZIG_LOCAL_CACHE_DIR="$LINUX/zig-cache-local"
-# What the guest Wine does without: no X11, no system audio or Vulkan (wsd, winesailaudio and Neptune replace them).
+# What the guest Wine does without: no X11, no system audio or Vulkan (wsd, wineobeliskaudio and Neptune replace them).
 WINE_OPTIONS=(--enable-win64 --enable-archs=x86_64 --disable-tests --without-x --without-fontconfig
     --without-gstreamer --without-pulse --without-alsa --without-cups --without-sdl --without-vulkan
     --without-opengl --without-dbus --without-udev --without-usb --without-v4l2 --without-gphoto --without-sane
@@ -197,7 +197,7 @@ build_wine() {
 }
 
 # The engine's host programs: fexdarwin-run (FEXCore and LKD), the window server (wsd, wsdctl), the input service
-# (sailover-input, with SDL3 inside) and the supervisor wrapper, without their debug information, which points into
+# (obelisk-input, with SDL3 inside) and the supervisor wrapper, without their debug information, which points into
 # the build tree.
 build_lkd() {
     local key out="$LINUX/lkd" binary notice
@@ -208,8 +208,8 @@ build_lkd() {
     rm -rf "$out"
     mkdir -p "$out/bin" "$out/licenses"
     cp "$LKD_SOURCES/fexdarwin/build/host/fexdarwin-run" "$LKD_SOURCES/wsd/bin/wsd" "$LKD_SOURCES/wsd/bin/wsdctl" \
-        "$LKD_SOURCES/input/bin/sailover-input" "$LKD_SOURCES/fexdarwin/scripts/run-with-timeout.sh" "$out/bin/"
-    for binary in fexdarwin-run wsd wsdctl sailover-input; do
+        "$LKD_SOURCES/input/bin/obelisk-input" "$LKD_SOURCES/fexdarwin/scripts/run-with-timeout.sh" "$out/bin/"
+    for binary in fexdarwin-run wsd wsdctl obelisk-input; do
         codesign --remove-signature "$out/bin/$binary" 2>/dev/null || true
         strip -S "$out/bin/$binary"
         codesign --sign - "$out/bin/$binary"

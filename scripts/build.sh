@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds SailOver's Wine runtime from the wine submodule and the pinned inputs in
+# Builds Obelisk's Wine runtime from the wine submodule and the pinned inputs in
 # sources.json. Each step reruns only when its inputs change.
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"

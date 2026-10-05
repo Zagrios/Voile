@@ -1,6 +1,6 @@
 # Voile
 
-Voile is the runtime [SailOver](https://github.com/Zagrios/sailover) runs Windows games with, as Steam runs them with Proton: [voile-wine](https://github.com/Zagrios/voile-wine), plus the pieces that ship beside it, GnuTLS, Proton's Steam bridge, Valve's steamclient libraries and Apple's D3DMetal. This repository holds the recipe. Its builds are the runtime SailOver installs.
+Voile is the runtime [Obelisk](https://github.com/Zagrios/obelisk) runs Windows games with, as Steam runs them with Proton: [voile-wine](https://github.com/Zagrios/voile-wine), plus the pieces that ship beside it, GnuTLS, Proton's Steam bridge, Valve's steamclient libraries and Apple's D3DMetal. This repository holds the recipe. Its builds are the runtime Obelisk installs.
 
 Everything in this repository is licensed under the LGPL-2.1-or-later (see `LICENSE`). D3DMetal, which the runtime downloads and ships unmodified, keeps Apple's license.
 
@@ -16,13 +16,13 @@ python3 -m pip install mako pyyaml   # Neptune's build (the Linux engine)
 
 The build needs Apple silicon with Rosetta and Xcode. It downloads the llvm-mingw cross compiler itself. Wine is built for x86_64 and runs under Rosetta, since it executes the game's x86 code in its own process. FreeType and GnuTLS, which backs Windows HTTPS, are built for x86_64 too and ship beside Wine's unix libraries. Each step reruns only when its inputs change.
 
-To launch Windows Steam games from a development build of SailOver, install the runtime where SailOver looks for it, then run SailOver from its own checkout:
+To launch Windows Steam games from a development build of Obelisk, install the runtime where Obelisk looks for it, then run Obelisk from its own checkout:
 
 ```sh
-./scripts/install-dev.sh        # into SailOver's <library>/Voile/current
+./scripts/install-dev.sh        # into Obelisk's <library>/Voile/current
 ```
 
-A `winedebug` file at the root of an installed runtime replaces SailOver's default Wine debug channels, for example `err+all,+steamclient`. SailOver writes Wine's output to `~/Library/Logs/SailOver/Steam/wine-<appid>.log`.
+A `winedebug` file at the root of an installed runtime replaces Obelisk's default Wine debug channels, for example `err+all,+steamclient`. Obelisk writes Wine's output to `~/Library/Logs/Obelisk/Steam/wine-<appid>.log`.
 
 ## The Linux engine
 
@@ -33,7 +33,7 @@ built and published apart from the macOS one.
 
 | Part | Where it comes from |
 |---|---|
-| `wine/` | voile-wine (the `wine` submodule) cross-built for Linux by `build-linux.sh`, with zig and llvm-mingw. Its Linux-only drivers talk to wsd: `winesailover.drv` (display, input), `winesailaudio.drv` (audio), `nptunix` (Direct3D frames). |
+| `wine/` | voile-wine (the `wine` submodule) cross-built for Linux by `build-linux.sh`, with zig and llvm-mingw. Its Linux-only drivers talk to wsd: `wineobelisk.drv` (display, input), `wineobeliskaudio.drv` (audio), `nptunix` (Direct3D frames). |
 | `engine/` | `fexdarwin-run`, `wsd`, `wsdctl`, `run-with-timeout.sh` from voile-lkd (the private `voile-lkd` submodule), built by `build-linux.sh`. |
 | `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`), built from the private `neptune` submodule, and DXMT, the `dxmt` archive (`import-dxmt.sh`). |
 | `windows/` | Neptune's `d3d11.dll`, `dxgi.dll`, `d3d12.dll`, built from the `neptune` submodule, which a launch copies into the prefix (`WINEDLLOVERRIDES=d3d11,dxgi,d3d12=n`). |
@@ -49,7 +49,7 @@ holds both runtimes. `install-dev.sh` installs a development build in
 `<library>/Voile/current/linux` when it is built. A launch starts wsd and
 the render server (`RENDER_SERVER_EXEC_PATH=graphics/libexec/virgl_render_server`, `NPT_BACKEND=dxmt` and the DXMT
 library paths) under a supervisor, then `engine/fexdarwin-run` with `FEXDARWIN_LKD=1`, `FEXDARWIN_ROOT=root`
-read-only and binds for `/opt/wine`, the home with the prefix, the game and `/run/sailover` (wsd's socket folder).
+read-only and binds for `/opt/wine`, the home with the prefix, the game and `/run/obelisk` (wsd's socket folder).
 voile-lkd's `tools/dev/eac-run.py` and `docs/V1.md` describe a whole session.
 
 voile-lkd and Neptune build from their submodules like Wine, in their own checkouts, and lose their debug
@@ -75,20 +75,20 @@ Once the repositories are public, pushing a tag runs `package.sh` and `publish.s
 ## Inputs
 
 - A component that is a git repository and builds from source is a submodule, pinned by commit:
-  - `wine` is [voile-wine](https://github.com/Zagrios/voile-wine): CrossOver's open-source Wine on its `crossover` branch, SailOver's changes as commits on `main`. Wine builds straight from this checkout, so a local edit rebuilds it. Its changes are commits there, never patches here.
+  - `wine` is [voile-wine](https://github.com/Zagrios/voile-wine): CrossOver's open-source Wine on its `crossover` branch, Obelisk's changes as commits on `main`. Wine builds straight from this checkout, so a local edit rebuilds it. Its changes are commits there, never patches here.
   - `voile-lkd` is [voile-lkd](https://github.com/Zagrios/voile-lkd), the Linux engine's host programs, with FEX as its own submodule.
   - `neptune` is [Neptune](https://github.com/Zagrios/neptune), the Direct3D driver of the Linux engine and its render server.
 - `sources.json` pins every archive by URL and SHA-256: the CrossOver tarball for FreeType, GnuTLS and GMP, Nettle, Proton, Valve's steamclient libraries, Wine Mono and its license, D3DMetal and llvm-mingw. A mismatch stops the build.
 - `patches/<component>/NNNN-name.patch` files are applied in order onto the sources of an archived component, today Proton's `lsteamclient`. A patch that no longer applies stops the build.
 - Proton's `lsteamclient` and `steam_helper` keep their own licenses. They are downloaded at build time and never copied into this repository.
 
-## How SailOver runs a game
+## How Obelisk runs a game
 
-Each Windows installation gets its own prefix in SailOver's `<library>/Prefixes`, named after the installation folder. SailOver creates it on the first launch and copies Valve's `steamclient.dll` and `steamclient64.dll` into `C:\Program Files (x86)\Steam`. The game starts behind Proton's `steam.exe`, and lsteamclient connects it to SailOver's Steam host. The prefix's user folders stay inside it instead of linking to the Mac home, and Steam Auto-Cloud maps its Windows roots, such as `%WinAppDataLocalLow%`, into the prefix's `crossover` profile. Files a game writes through the SDK's RemoteStorage never enter the prefix: lsteamclient hands them to the macOS Steam engine, whose storage SailOver syncs as for a macOS game.
+Each Windows installation gets its own prefix in Obelisk's `<library>/Prefixes`, named after the installation folder. Obelisk creates it on the first launch and copies Valve's `steamclient.dll` and `steamclient64.dll` into `C:\Program Files (x86)\Steam`. The game starts behind Proton's `steam.exe`, and lsteamclient connects it to Obelisk's Steam host. The prefix's user folders stay inside it instead of linking to the Mac home, and Steam Auto-Cloud maps its Windows roots, such as `%WinAppDataLocalLow%`, into the prefix's `crossover` profile. Files a game writes through the SDK's RemoteStorage never enter the prefix: lsteamclient hands them to the macOS Steam engine, whose storage Obelisk syncs as for a macOS game.
 
 ## D3DMetal
 
-D3DMetal translates Direct3D 10, 11 and 12 to Metal, for 64-bit games. The Game Porting Toolkit's license lets anyone distribute its Redistributables, the toolkit's `redist` folder, on their own: unmodified, for non-commercial purposes and with Apple's notices. SailOver is free, so the runtime ships them that way.
+D3DMetal translates Direct3D 10, 11 and 12 to Metal, for 64-bit games. The Game Porting Toolkit's license lets anyone distribute its Redistributables, the toolkit's `redist` folder, on their own: unmodified, for non-commercial purposes and with Apple's notices. Obelisk is free, so the runtime ships them that way.
 
 Downloading the toolkit takes an Apple developer account, so this repository publishes the Redistributables as they are in a `d3dmetal-<version>` release, and `sources.json` pins it. A new toolkit version becomes a new release:
 
@@ -101,7 +101,7 @@ The script packs `build/downloads/d3dmetal-4.0-beta2.tar.xz` and prints the comm
 The build extracts D3DMetal into `build/d3dmetal`, apart from `build/stage`, which stays Wine's own. To run it locally:
 
 ```sh
-SAILOVER_GRAPHICS=d3dmetal ./scripts/wine-dev.sh game.exe
+OBELISK_GRAPHICS=d3dmetal ./scripts/wine-dev.sh game.exe
 ```
 
 Wine searches its own `lib/wine` before `WINEDLLPATH`, so `wine-dev.sh` clones the runtime and lays D3DMetal's DLLs over Wine's. `CX_APPLEGPTK_LIBD3DSHARED_PATH` makes CrossOver's Wine preload `libd3dshared.dylib`, which D3DMetal's unix libraries need. `install-dev.sh` lays the same DLLs over the installed runtime.
