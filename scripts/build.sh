@@ -32,8 +32,10 @@ GNUTLS_OPTIONS=(--enable-shared --disable-static --with-included-libtasn1
     --disable-cxx --disable-nls --disable-libdane --disable-openssl-compatibility)
 WINE_OPTIONS=(--enable-archs=i386,x86_64 --disable-tests --without-x --without-gstreamer
     --without-sdl --without-vulkan)
-# Proton's Steam modules. Every other patches/ folder applies to the CrossOver tarball.
+# Proton's Steam modules. Every other patches/ folder applies to the CrossOver tarball, except the Linux engine's,
+# which build-linux.sh applies.
 PROTON_COMPONENTS=(lsteamclient steam_helper)
+LINUX_COMPONENTS=(d3dmetal-native)
 
 fail() {
     echo "$*" >&2
@@ -89,7 +91,9 @@ crossover_components() {
     local directory
     for directory in "$RUNTIME"/patches/*/; do
         [[ -d "$directory" ]] || continue
-        is_proton_component "$(basename "$directory")" || basename "$directory"
+        is_proton_component "$(basename "$directory")" && continue
+        [[ " ${LINUX_COMPONENTS[*]} " == *" $(basename "$directory") "* ]] && continue
+        basename "$directory"
     done
 }
 

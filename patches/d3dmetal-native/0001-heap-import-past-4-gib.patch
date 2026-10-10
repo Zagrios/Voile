@@ -1,0 +1,53 @@
+Import a shared-memory window larger than 4 GiB as a D3D12 heap, and let a
+buffer placed in it be as large as Metal allows (MTLDevice.maxBufferLength).
+
+ELDEN RING creates a committed UPLOAD buffer of 4 GiB + 1 KiB and maps it for
+its UI text. Neptune backs CPU-visible buffers with a guest shm heap, here of
+4 GiB + 64 KiB, which dmn_open_existing_heap_from_fd refused with a 4 GiB cap
+copied from the shared-surface limit. Neptune then fell back to its copying
+map path, which cannot map 4 GiB, so every Map of that buffer failed and the
+text never reached the GPU. The window is already bounded by the size of the
+shm object (fstat), and a buffer by Metal's own limit. Plain cross-process
+imports, whose size comes off the wire, keep the 4 GiB cap.
+
+diff --git a/src/dmn_com_hooks.cpp b/src/dmn_com_hooks.cpp
+index 02e0684..ca92cef 100644
+--- a/src/dmn_com_hooks.cpp
++++ b/src/dmn_com_hooks.cpp
+@@ -3446,9 +3446,12 @@ extern "C" int32_t dmn_open_existing_heap_from_fd(void* device, int fd,
+     if (!device || !iid || !out_heap)
+         return E_INVALIDARG;
+     *out_heap = nullptr;
+-    /* Mirrors dmn_share_metal.mm's kMaxSharedBytes. */
+-    const uint64_t kMaxImportBytes = 1ull << 32;
+-    if (fd < 0 || !size || size > kMaxImportBytes) {
++    /* No size cap of its own: the window must lie inside the shm object
++     * (fstat below), and each buffer placed in it must fit in one MTLBuffer
++     * (the consumer substitution in dmn_share_metal.mm checks Metal's
++     * maxBufferLength). A D3D12 buffer may pass 4 GiB: ELDEN RING maps a
++     * committed UPLOAD buffer of 4 GiB + 1 KiB. */
++    if (fd < 0 || !size) {
+         DMN_ERROR("hooks: heap import rejected (fd=%d size=%llu)", fd,
+                   (unsigned long long)size);
+         return E_INVALIDARG;
+diff --git a/src/dmn_share_metal.mm b/src/dmn_share_metal.mm
+index 2c32618..a163e0f 100644
+--- a/src/dmn_share_metal.mm
++++ b/src/dmn_share_metal.mm
+@@ -1166,8 +1166,14 @@ void swz_tex_replace4(id self, SEL _cmd, MTLRegion region, NSUInteger level,
+      * window is legal; past the window stays a hard error. */
+     size_t logical = (size_t)t_arm.existing_size;
+     const size_t window = (size_t)t_arm.existing_max;
+-    if (!logical || logical > kMaxSharedBytes) {
+-        DMN_ERROR("share: import buffer size %zu out of range", logical);
++    /* A window lies inside a heap whose shm object this process holds and
++     * whose size was checked against the fd, so Metal's own buffer limit is
++     * the only bound left. A plain import's size comes off the wire. */
++    const size_t limit = window ? (size_t)device.maxBufferLength
++                                : kMaxSharedBytes;
++    if (!logical || logical > limit) {
++        DMN_ERROR("share: import buffer size %zu out of range (limit %zu)",
++                  logical, limit);
+         return nil;
+     }
+     if (length && (size_t)length > logical) {

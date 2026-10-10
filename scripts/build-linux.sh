@@ -385,17 +385,24 @@ build_neptune() {
 
 # UTM's d3dmetal-native, the host interface Apple's D3DMetal expects from its Wine, for a native process: the
 # render server's D3DMetal backend. x86_64 only, like D3DMetal, which it finds through D3DMETAL_FRAMEWORK_PATH; the
-# runtime's lib/external/D3DMetal.framework is the one to name, never a copy. MIT, built from the pinned commit.
+# runtime's lib/external/D3DMetal.framework is the one to name, never a copy. MIT, built from the pinned commit with
+# patches/d3dmetal-native applied in order.
 build_d3dmetal_native() {
-    local archive key sources="$LINUX/obj/d3dmetal-native-src" objects="$LINUX/obj/d3dmetal-native"
-    local out="$LINUX/d3dmetal-native"
+    local archive key patch sources="$LINUX/obj/d3dmetal-native-src" objects="$LINUX/obj/d3dmetal-native"
+    local out="$LINUX/d3dmetal-native" patches=("$RUNTIME"/patches/d3dmetal-native/*.patch)
     archive="$(fetch d3dmetal-native)"
-    key="$(field d3dmetal-native sha256)"
+    key="$(field d3dmetal-native sha256)-$(for patch in "${patches[@]}"; do
+        if [[ -f "$patch" ]]; then basename "$patch"; cat "$patch"; fi
+    done | shasum -a 256 | cut -c1-16)"
     current d3dmetal-native "$key" && return
     echo "==> d3dmetal-native"
     rm -rf "$sources" "$objects" "$out"
     mkdir -p "$sources" "$out/lib" "$out/licenses"
     tar -xzf "$archive" -C "$sources" --strip-components 1
+    for patch in "${patches[@]}"; do
+        [[ -f "$patch" ]] || continue
+        patch -p1 -N -s -d "$sources" -i "$patch" || fail "$patch no longer applies"
+    done
     (
         export PATH="$CALLER_PATH"
         # Its last resort, when D3DMETAL_FRAMEWORK_PATH is unset, is a compiled-in path: D3DMetal's own install
