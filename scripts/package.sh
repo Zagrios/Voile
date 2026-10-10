@@ -26,8 +26,9 @@ download() {
     echo "$WORK/downloads/$(basename "$(field "$1" url)")"
 }
 
-[[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]] ||
-    fail "Usage: package.sh v<CrossOver version>-<revision>, such as v26.3.0-1"
+# A -dev suffix names a local build that is never published.
+[[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+(-dev)?$ ]] ||
+    fail "Usage: package.sh v<CrossOver version>-<revision>[-dev], such as v26.3.0-1"
 CROSSOVER="$(basename "$(field crossover url)" .tar.gz)"
 CROSSOVER="${CROSSOVER#crossover-sources-}"
 [[ "$VERSION" == "v$CROSSOVER-"* ]] || fail "$VERSION does not match CrossOver $CROSSOVER in sources.json"
@@ -59,9 +60,12 @@ add_d3dmetal() {
     ditto "$WORK/d3dmetal/lib" "$PACKAGE/lib"
 }
 
-# The Linux engine's runtime: the engine, the render server and DXMT, Neptune's
-# DLLs for the prefix, voile-wine built for Linux and the Debian root. Wine's ELF
-# and PE files lose their debug information, which points into this build tree.
+# The Linux engine's runtime: the engine, the render servers with DXMT and
+# d3dmetal-native, Neptune's DLLs for the prefix, voile-wine built for Linux with
+# Proton's Steam bridge, Valve's Linux steamclient and the Debian root. Wine's ELF
+# and PE files lose their debug information, which points into this build tree;
+# Valve's steamclient, outside wine/, stays as Valve ships it. The D3DMetal
+# backend uses the runtime's own lib/external/D3DMetal.framework.
 add_linux() {
     local linux="$PACKAGE/linux"
     cp -cR "$WORK/linux/stage" "$linux"
@@ -70,8 +74,8 @@ add_linux() {
         xargs -0 -n 64 -P "$JOBS" "$STRIP" --strip-debug
 }
 
-# The licenses of everything the archive ships. Valve's steamclient libraries
-# come with none.
+# The licenses of everything the archive ships. Valve's steamclient libraries,
+# Windows and Linux, come with none.
 copy_licenses() {
     local licenses="$PACKAGE/licenses"
     mkdir -p "$licenses/d3dmetal"
@@ -86,7 +90,7 @@ copy_licenses() {
     tar -xzOf "$(download proton)" '*/LICENSE.proton' > "$licenses/steam_helper.txt"
     mkdir -p "$licenses/linux"
     cp "$WORK"/linux/lkd/licenses/* "$WORK"/linux/neptune/licenses/* "$WORK"/linux/dxmt/licenses/* \
-        "$licenses/linux/"
+        "$WORK"/linux/d3dmetal-native/licenses/* "$licenses/linux/"
     cp "$WORK/linux/dxmt/SOURCE" "$licenses/linux/dxmt-source.txt"
     # The Debian root: every package with its version and URL, which also locate its source package.
     cp "$WORK"/linux/debian-root/lock*.json "$licenses/linux/"
@@ -109,6 +113,8 @@ write_manifest() {
     "fex": "$(plutil -extract fex raw -o - "$WORK/linux/lkd/VERSION.json")",
     "neptune": "$(plutil -extract neptune raw -o - "$WORK/linux/neptune/VERSION.json")",
     "dxmt": "$(basename "$(field dxmt url)" .tar.xz)",
+    "d3dmetal-native": "$(basename "$(field d3dmetal-native url)" .tar.gz)",
+    "steamclient": "$(basename "$(field steam-linux url)")",
     "debian-root": "$(basename "$(field debian-root url)" .tar.xz)"
   }
 }

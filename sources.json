@@ -50,5 +50,17 @@
   "dxmt": {
     "url": "https://github.com/Zagrios/voile/releases/download/dxmt-bcdcf6da89af/dxmt-bcdcf6da89af.tar.xz",
     "sha256": "a5f8d8e40eced00b9a85ff99c75c6e76d37e42d03c1e3fa07e74ef804e0ed8db"
+  },
+  "debian-x11proto-dev": {
+    "url": "https://deb.debian.org/debian/pool/main/x/xorgproto/x11proto-dev_2024.1-1_all.deb",
+    "sha256": "6a6764500eb8171d3cd6d793c09902974f8ea87bd20c68d9eac5f1eeaf3fc407"
+  },
+  "steam-linux": {
+    "url": "https://client-update.akamai.steamstatic.com/bins_sdk_ubuntu12.zip.481edab41be304d924937ae3ffd747a87d3687a0",
+    "sha256": "3b465088b2ffbb7e1a6df9007fa4b265bf0a29813aa176f420dc703551a5b981"
+  },
+  "d3dmetal-native": {
+    "url": "https://github.com/utmapp/d3dmetal-native/archive/d374b21668f94b7b7b059f152794fdb93e944b84.tar.gz",
+    "sha256": "c20fe4a5594a088bab0022a828e87d645f3884c34178cf89ae3813748a00e3b7"
   }
 }
