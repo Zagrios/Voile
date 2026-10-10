@@ -413,13 +413,18 @@ build_d3dmetal_native() {
     stamp d3dmetal-native "$key"
 }
 
+# steam-hostpid.so where a launch binds guest/ in the guest, as Obelisk does. The root's /etc/ld.so.preload names it,
+# so glibc's loader preloads it in every guest process: Easy Anti-Cheat starts ELDEN RING without the launch's
+# LD_PRELOAD. The library changes only the getpid() calls of Valve's steamclient.so.
+GUEST_PRELOAD=/opt/obelisk/steam-hostpid.so
+
 # The runtime's layout: engine/ (host programs), graphics/ (arm64 render server, DXMT), graphics/x86_64 (x86_64
 # render server, d3dmetal-native), windows/ (Neptune's DLLs for the prefix), wine/ (voile-wine for Linux, with
 # lsteamclient and steam.exe), steam/ (Valve's Linux steamclient), guest/ (libraries a launch preloads in the guest),
-# root/ (the Debian root).
+# root/ (the Debian root, with /etc/ld.so.preload).
 build_stage() {
     local key
-    key="$(cat "$LINUX"/stamps/{wine,steam,lkd,neptune,dxmt,d3dmetal-native,steam-linux,debian-root})"
+    key="$(cat "$LINUX"/stamps/{wine,steam,lkd,neptune,dxmt,d3dmetal-native,steam-linux,debian-root}) $GUEST_PRELOAD"
     current stage "$key" && return
     echo "==> Linux runtime stage"
     rm -rf "$STAGE/engine" "$STAGE/guest" "$STAGE/graphics" "$STAGE/windows" "$STAGE/steam" "$STAGE/root"
@@ -434,6 +439,7 @@ build_stage() {
     ln -s ../../steam/steamclient.dll ../../steam/steamclient64.dll "$STAGE/steam/"
     ditto "$LINUX/neptune/windows" "$STAGE/windows"
     cp -cR "$LINUX/debian-root/root" "$STAGE/root"
+    printf '%s\n' "$GUEST_PRELOAD" > "$STAGE/root/etc/ld.so.preload"
     stamp stage "$key"
 }
 

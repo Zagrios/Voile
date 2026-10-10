@@ -38,9 +38,9 @@ built and published apart from the macOS one.
 | `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`) for arm64, built from the private `neptune` submodule, and DXMT, the `dxmt` archive (`import-dxmt.sh`). |
 | `graphics/x86_64/` | The same render server for x86_64, which runs under Rosetta, and UTM's [d3dmetal-native](https://github.com/utmapp/d3dmetal-native) (`lib/libd3dmetal-native.dylib`, MIT, the pinned `d3dmetal-native` source), which hosts Apple's D3DMetal in it. D3DMetal is x86_64 only. The backend loads the runtime's own `lib/external/D3DMetal.framework`, unmodified: the Linux engine has no copy. |
 | `steam/` | Valve's Linux `steamclient.so` and `crashhandler.so` in `linux64/`, from the `steam-linux` package of Valve's client CDN (`bins_sdk_ubuntu12`, the build of Obelisk's macOS `steamclient.dylib`), unmodified. `steamclient.dll` and `steamclient64.dll` are links to the release's `steam/` folder. |
-| `guest/` | `steam-hostpid.so`, from voile-lkd, built with zig: preloaded in the guest (`LD_PRELOAD`), it makes Valve's `steamclient.so` report the macOS pid of its process, which Obelisk's Steam host checks. |
+| `guest/` | `steam-hostpid.so`, from voile-lkd, built with zig: preloaded in the guest, it makes Valve's `steamclient.so` report the macOS pid of its process, which Obelisk's Steam host checks. |
 | `windows/` | Neptune's `d3d11.dll`, `dxgi.dll`, `d3d12.dll`, built from the `neptune` submodule, which a launch copies into the prefix (`WINEDLLOVERRIDES=d3d11,dxgi,d3d12=n`). |
-| `root/` | The Debian trixie amd64 root the guest runs on, the `debian-root` archive (`linux/root`, `import-debian-root.sh`). |
+| `root/` | The Debian trixie amd64 root the guest runs on, the `debian-root` archive (`linux/root`, `import-debian-root.sh`), plus `/etc/ld.so.preload`, which names `/opt/obelisk/steam-hostpid.so`. |
 
 ```sh
 ./scripts/build.sh                       # first: its Wine tools and llvm-mingw build the Linux Wine
@@ -70,8 +70,10 @@ A Steam game reaches Obelisk's Steam host the way the macOS runtime's do, throug
 whose Linux side loads `$HOME/.steam/sdk64/steamclient.so` in the guest. The launch binds `RUNTIME/steam` read-only
 (for example at `/opt/steam`) and points the guest home's `.steam/sdk64` at its `linux64` folder; the prefix gets
 `RUNTIME/steam/steamclient.dll` and `steamclient64.dll` in `C:\Program Files (x86)\Steam`, where the runtime's ntdll
-redirects them to lsteamclient. The guest also preloads `RUNTIME/guest/steam-hostpid.so` (bound read-only, for example at
-`/opt/obelisk`, with `LD_PRELOAD=/opt/obelisk/steam-hostpid.so`), or the host drops the game's connection.
+redirects them to lsteamclient. The launch also binds `RUNTIME/guest` read-only at `/opt/obelisk`, or the host drops
+the game's connection: the root's `/etc/ld.so.preload` has glibc's loader preload `/opt/obelisk/steam-hostpid.so` in
+every guest process, even in a game that Easy Anti-Cheat starts without the launch's `LD_PRELOAD`. A launch without
+that bind still runs: the loader writes one `cannot be preloaded ... ignored` line for each process and goes on.
 
 voile-lkd and Neptune build from their submodules like Wine, in their own checkouts, and lose their debug
 information on the way into the stage. The `dxmt` and `debian-root` archives, which this repository does not build, are imported like
