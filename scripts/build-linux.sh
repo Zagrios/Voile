@@ -172,10 +172,16 @@ build_sysroot() {
 # PT_LOAD of a Linux library and of the loader starts on its own 16 KiB page.
 WINE_UNIX_LDFLAGS="-Wl,-z,max-page-size=16384"
 
+# The 64-bit preloader's file name. Older EAC launcher modules (ELDEN RING's) read /proc/self/exe and start the game
+# only from a loader named wine64-preloader, beside a wine64: GE-Proton keeps that layout. Wine still runs
+# wine-preloader, now a link to this file, and /proc/self/exe shows the file's own name.
+WINE_PRELOADER=wine64-preloader
+
 build_wine() {
-    local source_key key
+    local source_key key unix="$STAGE/wine/lib/wine/x86_64-unix"
     source_key="$(git -C "$WINE_SOURCES" rev-parse HEAD)-$(git -C "$WINE_SOURCES" diff HEAD | shasum -a 256 | cut -c1-16)"
     key="$source_key $(field zig sha256) $(cat "$LINUX/stamps/sysroot") ${WINE_OPTIONS[*]} $WINE_UNIX_LDFLAGS"
+    key+=" $WINE_PRELOADER"
     current wine "$key" && return
     echo "==> Wine for Linux $(git -C "$WINE_SOURCES" rev-parse --short=12 HEAD)"
     rm -rf "$OBJECTS" "$STAGE/wine"
@@ -196,6 +202,9 @@ build_wine() {
     )
     # A 64-bit-only build installs the loader under lib/wine/x86_64-unix; bin/wine points at it.
     ln -sf ../lib/wine/x86_64-unix/wine "$STAGE/wine/bin/wine"
+    mv "$unix/wine-preloader" "$unix/$WINE_PRELOADER"
+    ln -s "$WINE_PRELOADER" "$unix/wine-preloader"
+    ln -s wine "$unix/wine64"
     stamp wine "$key"
 }
 
