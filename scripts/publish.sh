@@ -19,7 +19,7 @@ value() {
 }
 
 [[ -n "$VERSION" ]] || fail "Usage: publish.sh v<CrossOver version>-<revision>"
-[[ "$VERSION" != *-dev ]] || fail "$VERSION is a local build: a -dev package is never published"
+[[ "$VERSION" != *-dev* ]] || fail "$VERSION is a local build: a -dev package is never published"
 [[ -f "$MANIFEST" && -f "$ARCHIVE" ]] || fail "Package it first: ./scripts/package.sh $VERSION"
 (cd "$WORK/release" && shasum -a 256 -c -s "$NAME.tar.xz.sha256") ||
     fail "$ARCHIVE does not match its checksum"

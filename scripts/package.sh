@@ -26,9 +26,9 @@ download() {
     echo "$WORK/downloads/$(basename "$(field "$1" url)")"
 }
 
-# A -dev suffix names a local build that is never published.
-[[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+(-dev)?$ ]] ||
-    fail "Usage: package.sh v<CrossOver version>-<revision>[-dev], such as v26.3.0-1"
+# A -dev suffix, numbered or not (-dev2), names a local build that is never published.
+[[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+(-dev[0-9]*)?$ ]] ||
+    fail "Usage: package.sh v<CrossOver version>-<revision>[-dev[<n>]], such as v26.3.0-1"
 CROSSOVER="$(basename "$(field crossover url)" .tar.gz)"
 CROSSOVER="${CROSSOVER#crossover-sources-}"
 [[ "$VERSION" == "v$CROSSOVER-"* ]] || fail "$VERSION does not match CrossOver $CROSSOVER in sources.json"
