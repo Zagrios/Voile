@@ -132,3 +132,5 @@ OBELISK_GRAPHICS=d3dmetal ./scripts/wine-dev.sh game.exe
 Wine searches its own `lib/wine` before `WINEDLLPATH`, so `wine-dev.sh` clones the runtime and lays D3DMetal's DLLs over Wine's. `CX_APPLEGPTK_LIBD3DSHARED_PATH` makes CrossOver's Wine preload `libd3dshared.dylib`, which D3DMetal's unix libraries need. `install-dev.sh` lays the same DLLs over the installed runtime.
 
 `tests/d3d11-smoke.c` presents 120 frames and prints the adapter and feature level it got. wined3d stops at 10_1; D3DMetal reports "AMD Compatibility Mode" at 11_0.
+
+`tests/wow64-force-exec.c` is a 32-bit program that forces exec permission, as Wine's loader does for a module without NX_COMPAT, then makes a few syscalls and exits 0. A runtime that loses the syscall dispatcher page at that point dies with "stack overflow" instead.
