@@ -80,8 +80,8 @@ voile-lkd and Neptune build from their submodules like Wine, in their own checko
 | Folder | Contents |
 |---|---|
 | `wine/` | voile-wine (the `wine` submodule) cross-built for Linux by `build-linux.sh`, with zig and llvm-mingw. Its Linux-only drivers talk to wsd: `wineobelisk.drv` (display, input), `wineobeliskaudio.drv` (audio), `nptunix` (Direct3D frames). Proton's `lsteamclient` (`lsteamclient.dll` and `lsteamclient.so`) and `steam.exe` are built into it like the macOS runtime's. |
-| `engine/` | `fexdarwin-run`, `wsd`, `wsdctl`, `obelisk-input` and `run-with-timeout.sh` from voile-lkd (the private `voile-lkd` submodule), built by `build-linux.sh`. |
-| `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`) for arm64, built from the private `neptune` submodule, and DXMT, the `dxmt` archive (`import-dxmt.sh`). |
+| `engine/` | `fexdarwin-run`, `wsd`, `wsdctl`, `obelisk-input` and `run-with-timeout.sh` from the `voile-lkd` submodule, built by `build-linux.sh`. |
+| `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`) for arm64, built from the `neptune` submodule, and DXMT, the `dxmt` archive (`import-dxmt.sh`). |
 | `graphics/x86_64/` | The same render server for x86_64, which runs under Rosetta, and UTM's [d3dmetal-native](https://github.com/utmapp/d3dmetal-native) (`lib/libd3dmetal-native.dylib`, MIT, the pinned `d3dmetal-native` source with `patches/d3dmetal-native`), which hosts Apple's D3DMetal in it. D3DMetal is x86_64 only. The backend loads the runtime's own `lib/external/D3DMetal.framework`, unmodified: the Linux engine has no copy. |
 | `steam/` | Valve's Linux `steamclient.so` and `crashhandler.so` in `linux64/`, from the `steam-linux` package of Valve's client CDN (`bins_sdk_ubuntu12`, the build of Obelisk's macOS `steamclient.dylib`), unmodified. `steamclient.dll` and `steamclient64.dll` are links to the release's `steam/` folder. |
 | `guest/` | `steam-hostpid.so`, from voile-lkd, built with zig. Preloaded in the guest, it makes Valve's `steamclient.so` report the macOS pid of its process, which Obelisk's Steam host checks. |
@@ -132,9 +132,9 @@ A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The r
 - the licenses of everything it ships, in `licenses/`,
 - `runtime.json`, which names its CrossOver version, its voile, voile-wine and Proton commits, and in `linux` the Linux engine's parts.
 
-A `-dev` suffix, such as `v26.3.0-13-dev`, packages a local build to try before a release; `publish.sh` refuses it. `publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit.
+A `-dev` suffix, such as `v26.3.0-13-dev`, packages a local build to try before a release; `publish.sh` refuses it. `publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit. With `--draft`, the release stays a draft, and GitHub creates the tag when it is published.
 
-Once the repositories are public, pushing a tag runs `package.sh` and `publish.sh` in the Release workflow, on GitHub's `macos-26` runners, from a clean checkout. While they are private, the workflow skips itself: private repositories pay macOS minutes at ten times the Linux rate, and a full build outlasts the free ones.
+The Release workflow does both on GitHub, from a clean checkout of `main` on an Apple silicon runner with macOS 27. Start it from the Actions tab with **Run workflow** and the version. It refuses a version that isn't `v<CrossOver version>-<revision>` or that already has a release, runs `package.sh`, and drafts the release with `publish.sh --draft`. Check the draft, then publish it.
 
 Obelisk pins the release it installs in its `crates/game-runtime/voile-release.json`, with the archive's size and SHA-256.
 
@@ -161,7 +161,7 @@ Downloading the toolkit takes an Apple developer account, so this repository pub
 ./scripts/import-d3dmetal.sh ~/Downloads/Game_Porting_Toolkit_4.0_beta_2.dmg
 ```
 
-The script packs `build/downloads/d3dmetal-4.0-beta2.tar.xz` and prints the command that publishes it, with the checksum `sources.json` then needs. While this repository is private, its releases need a signed-in download: `gh release download d3dmetal-4.0-beta2 -D build/downloads` fetches the archive before a build.
+The script packs `build/downloads/d3dmetal-4.0-beta2.tar.xz` and prints the command that publishes it, with the checksum `sources.json` then needs.
 
 The build extracts D3DMetal into `build/d3dmetal`, apart from `build/stage`, which stays Wine's own. To run it locally:
 

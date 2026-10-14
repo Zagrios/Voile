@@ -1,40 +1,80 @@
+# Builds a complete Voile release from a clean checkout and drafts it on
+# GitHub: the runtime archive, with the Linux engine in its linux folder, and
+# its SHA-256. Run it from the Actions tab with the version. Publish the draft
+# by hand once it is checked; publishing creates the tag on the packaged commit.
 name: Release
 
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version, v<CrossOver version>-<revision>, such as v26.3.0-14
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 concurrency:
   group: release
+  cancel-in-progress: false
 
 jobs:
   runtime:
-    # Private repositories pay macOS minutes at ten times the Linux rate, and a
-    # full build outlasts the free ones. Until Obelisk's repositories are public,
-    # releases are published by hand with package.sh and publish.sh.
-    if: ${{ !github.event.repository.private }}
-    runs-on: macos-26
+    # Apple silicon on macOS 27, as Obelisk's releases; Rosetta runs the
+    # x86_64 Wine that package.sh checks the archive with.
+    runs-on: xcode-27
     timeout-minutes: 360
+    env:
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          submodules: recursive
+      - name: Check the version
+        run: |
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]]; then
+            echo "::error::$VERSION is not v<CrossOver version>-<revision>, such as v26.3.0-14."
+            exit 1
+          fi
+          if gh release view "$VERSION" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::A release $VERSION already exists."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+
+      - name: Check out the submodules
+        run: |
+          # FEX's test binaries (800 MB) stay out: the build doesn't use them.
+          git submodule update --init --depth 1 wine voile-lkd neptune
+          git -C voile-lkd submodule update --init --depth 1 fex
+          for bins in fex-gcc-target-tests-bins fex-gvisor-tests-bins fex-posixtest-bins; do
+            git -C voile-lkd/fex config "submodule.External/$bins.update" none
+          done
+          git -C voile-lkd/fex submodule update --init --recursive --depth 1
+          git submodule status --recursive
 
       - name: Install the build tools
         run: |
           arch -x86_64 /usr/bin/true 2>/dev/null ||
             sudo softwareupdate --install-rosetta --agree-to-license
-          brew install bison cmake meson ninja pkgconf
-          python3 -m pip install --break-system-packages mako pyyaml
+          brew install bison meson ninja pkgconf
+          # Neptune's meson needs mako and PyYAML, and voile-lkd cmake, from the PATH.
+          python3 -m venv build/pyenv
+          build/pyenv/bin/pip install --quiet mako pyyaml cmake
+          df -h "$GITHUB_WORKSPACE"
+
+      - uses: actions/cache@v4
+        with:
+          path: build/downloads
+          key: voile-downloads-${{ hashFiles('sources.json') }}
+          restore-keys: voile-downloads-
 
       - name: Build and package
-        run: |
-          ./scripts/package.sh "$GITHUB_REF_NAME"
+        run: PATH="$PWD/build/pyenv/bin:$PATH" ./scripts/package.sh "$VERSION"
 
-      - name: Publish
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: ./scripts/publish.sh "$GITHUB_REF_NAME"
+      - name: Draft the release
+        run: ./scripts/publish.sh "$VERSION" --draft
+
+      - name: Show the disk space left
+        if: always()
+        run: df -h "$GITHUB_WORKSPACE"
