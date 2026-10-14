@@ -61,9 +61,10 @@ jobs:
           brew install bison meson ninja pkgconf llvm@15 zstd
           # DXMT compiles its Metal shaders with Xcode's Metal toolchain.
           xcodebuild -downloadComponent MetalToolchain
-          # Neptune's meson needs mako and PyYAML, and voile-lkd cmake, from the PATH.
+          # Neptune's meson needs mako, PyYAML and packaging (Mesa compares versions with it, and Python 3.12 has
+          # no distutils left to fall back on), and voile-lkd cmake, from the PATH.
           python3 -m venv build/pyenv
-          build/pyenv/bin/pip install --quiet mako pyyaml cmake
+          build/pyenv/bin/pip install --quiet mako pyyaml packaging cmake
           df -h "$GITHUB_WORKSPACE"
 
       - uses: actions/cache@v4

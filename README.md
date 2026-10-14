@@ -41,7 +41,7 @@ git clone --recursive https://github.com/Zagrios/voile.git
 cd voile
 brew install bison cmake meson ninja pkgconf
 brew install llvm@15 zstd            # for DXMT, in the Linux engine
-python3 -m pip install mako pyyaml   # for Neptune, in the Linux engine
+python3 -m pip install mako pyyaml packaging   # for Neptune, in the Linux engine
 ./scripts/build.sh                   # the macOS engine, in build/stage
 ```
 

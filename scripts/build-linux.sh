@@ -3,9 +3,9 @@
 # Steam bridge, the engine itself (the voile-lkd submodule), Neptune (the neptune submodule) and DXMT (the dxmt
 # submodule), beside the pinned d3dmetal-native, Valve Linux steamclient and Debian root inputs of sources.json. Run
 # build.sh first: the Linux build reuses the Wine build tools of the macOS build, its llvm-mingw and its patched
-# Proton sources. voile-lkd needs cmake, Neptune and DXMT meson, Neptune Python with Mako and PyYAML, all from the
-# caller's PATH; DXMT also needs Homebrew's llvm@15 and zstd and Xcode's Metal toolchain. Each step reruns only when
-# its inputs change. Result: build/linux/stage.
+# Proton sources. voile-lkd needs cmake, Neptune and DXMT meson, Neptune Python with Mako, PyYAML and packaging,
+# all from the caller's PATH; DXMT also needs Homebrew's llvm@15 and zstd and Xcode's Metal toolchain. Each step
+# reruns only when its inputs change. Result: build/linux/stage.
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
 WINE_SOURCES="$RUNTIME/wine"
