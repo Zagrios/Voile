@@ -33,7 +33,7 @@ CROSSOVER="$(basename "$(field crossover url)" .tar.gz)"
 CROSSOVER="${CROSSOVER#crossover-sources-}"
 [[ "$VERSION" == "v$CROSSOVER-"* ]] || fail "$VERSION does not match CrossOver $CROSSOVER in sources.json"
 # runtime.json names commits, so the archive must hold exactly what they contain.
-for repository in "$RUNTIME" "$RUNTIME/wine" "$RUNTIME/voile-lkd" "$RUNTIME/neptune"; do
+for repository in "$RUNTIME" "$RUNTIME/wine" "$RUNTIME/voile-lkd" "$RUNTIME/neptune" "$RUNTIME/dxmt"; do
     [[ -z "$(git -C "$repository" status --porcelain)" ]] || fail "$repository has uncommitted changes"
 done
 
@@ -112,7 +112,7 @@ write_manifest() {
     "voile-lkd": "$(plutil -extract voile-lkd raw -o - "$WORK/linux/lkd/VERSION.json")",
     "fex": "$(plutil -extract fex raw -o - "$WORK/linux/lkd/VERSION.json")",
     "neptune": "$(plutil -extract neptune raw -o - "$WORK/linux/neptune/VERSION.json")",
-    "dxmt": "$(basename "$(field dxmt url)" .tar.xz)",
+    "dxmt": "$(git -C "$RUNTIME/dxmt" rev-parse HEAD)",
     "d3dmetal-native": "$(basename "$(field d3dmetal-native url)" .tar.gz)",
     "steamclient": "$(basename "$(field steam-linux url)")",
     "debian-root": "$(basename "$(field debian-root url)" .tar.xz)"

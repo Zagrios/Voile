@@ -38,6 +38,6 @@ fi
 notes="CrossOver $(value crossover), Zagrios/voile-wine@$(value voile-wine),"
 notes+=" ValveSoftware/Proton@$(value proton), D3DMetal from $(value d3dmetal)."
 notes+=" Linux engine: voile-lkd@$(value linux.voile-lkd), neptune@$(value linux.neptune),"
-notes+=" $(value linux.dxmt), $(value linux.debian-root)."
+notes+=" dxmt@$(value linux.dxmt), $(value linux.debian-root)."
 gh release create "$VERSION" "$ARCHIVE" "$ARCHIVE.sha256" \
     --target "$commit" --title "$VERSION" --notes "$notes" ${DRAFT:+--draft}

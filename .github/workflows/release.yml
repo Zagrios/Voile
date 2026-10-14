@@ -44,8 +44,9 @@ jobs:
 
       - name: Check out the submodules
         run: |
-          # FEX's test binaries (800 MB) stay out: the build doesn't use them.
-          git submodule update --init --depth 1 wine voile-lkd neptune
+          # FEX's test binaries (800 MB) and DXMT's NVAPI stay out: the build doesn't use them.
+          git submodule update --init --depth 1 wine voile-lkd neptune dxmt
+          git -C dxmt submodule update --init --depth 1 include/native/directx
           git -C voile-lkd submodule update --init --depth 1 fex
           for bins in fex-gcc-target-tests-bins fex-gvisor-tests-bins fex-posixtest-bins; do
             git -C voile-lkd/fex config "submodule.External/$bins.update" none
@@ -57,7 +58,9 @@ jobs:
         run: |
           arch -x86_64 /usr/bin/true 2>/dev/null ||
             sudo softwareupdate --install-rosetta --agree-to-license
-          brew install bison meson ninja pkgconf
+          brew install bison meson ninja pkgconf llvm@15 zstd
+          # DXMT compiles its Metal shaders with Xcode's Metal toolchain.
+          xcodebuild -downloadComponent MetalToolchain
           # Neptune's meson needs mako and PyYAML, and voile-lkd cmake, from the PATH.
           python3 -m venv build/pyenv
           build/pyenv/bin/pip install --quiet mako pyyaml cmake

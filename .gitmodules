@@ -10,3 +10,7 @@
 	path = neptune
 	url = https://github.com/Zagrios/neptune.git
 	branch = main
+[submodule "dxmt"]
+	path = dxmt
+	url = https://github.com/Zagrios/dxmt.git
+	branch = main

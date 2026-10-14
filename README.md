@@ -40,6 +40,7 @@ You need a Mac with Apple silicon, Rosetta and Xcode.
 git clone --recursive https://github.com/Zagrios/voile.git
 cd voile
 brew install bison cmake meson ninja pkgconf
+brew install llvm@15 zstd            # for DXMT, in the Linux engine
 python3 -m pip install mako pyyaml   # for Neptune, in the Linux engine
 ./scripts/build.sh                   # the macOS engine, in build/stage
 ```
@@ -73,7 +74,7 @@ Games whose anti-cheat supports Linux run through voile-wine built for x86-64 **
 ./scripts/build-linux.sh             # result in build/linux/stage
 ```
 
-voile-lkd and Neptune build from their submodules like Wine, in their own checkouts, and lose their debug information on the way into the stage. `package.sh` lays the Linux engine in the release's `linux` folder, so one download holds both engines. `install-dev.sh` installs a development build in `<library>/Voile/current/linux` when it is built.
+voile-lkd, Neptune and DXMT build from their submodules like Wine, in their own checkouts, and lose their debug information on the way into the stage. DXMT links LLVM 15 from Homebrew's `llvm@15`, with zstd and libunwind, statically: its library needs only macOS, and the build stops if it links anything else. Its Metal shaders need Xcode's Metal toolchain (`xcodebuild -downloadComponent MetalToolchain`). `package.sh` lays the Linux engine in the release's `linux` folder, so one download holds both engines. `install-dev.sh` installs a development build in `<library>/Voile/current/linux` when it is built.
 
 ### What it holds
 
@@ -81,7 +82,7 @@ voile-lkd and Neptune build from their submodules like Wine, in their own checko
 |---|---|
 | `wine/` | voile-wine (the `wine` submodule) cross-built for Linux by `build-linux.sh`, with zig and llvm-mingw. Its Linux-only drivers talk to wsd: `wineobelisk.drv` (display, input), `wineobeliskaudio.drv` (audio), `nptunix` (Direct3D frames). Proton's `lsteamclient` (`lsteamclient.dll` and `lsteamclient.so`) and `steam.exe` are built into it like the macOS runtime's. |
 | `engine/` | `fexdarwin-run`, `wsd`, `wsdctl`, `obelisk-input` and `run-with-timeout.sh` from the `voile-lkd` submodule, built by `build-linux.sh`. |
-| `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`) for arm64, built from the `neptune` submodule, and DXMT, the `dxmt` archive (`import-dxmt.sh`). |
+| `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`) for arm64, built from the `neptune` submodule, and DXMT's `dxmt-native.framework`, built from the `dxmt` submodule. |
 | `graphics/x86_64/` | The same render server for x86_64, which runs under Rosetta, and UTM's [d3dmetal-native](https://github.com/utmapp/d3dmetal-native) (`lib/libd3dmetal-native.dylib`, MIT, the pinned `d3dmetal-native` source with `patches/d3dmetal-native`), which hosts Apple's D3DMetal in it. D3DMetal is x86_64 only. The backend loads the runtime's own `lib/external/D3DMetal.framework`, unmodified: the Linux engine has no copy. |
 | `steam/` | Valve's Linux `steamclient.so` and `crashhandler.so` in `linux64/`, from the `steam-linux` package of Valve's client CDN (`bins_sdk_ubuntu12`, the build of Obelisk's macOS `steamclient.dylib`), unmodified. `steamclient.dll` and `steamclient64.dll` are links to the release's `steam/` folder. |
 | `guest/` | `steam-hostpid.so`, from voile-lkd, built with zig. Preloaded in the guest, it makes Valve's `steamclient.so` report the macOS pid of its process, which Obelisk's Steam host checks. |
@@ -144,12 +145,13 @@ Obelisk pins the release it installs in its `crates/game-runtime/voile-release.j
   - `wine` is [voile-wine](https://github.com/Zagrios/voile-wine): CrossOver's open-source Wine on its `crossover` branch, Obelisk's changes as commits on `main`. Wine builds straight from this checkout, so a local edit rebuilds it. Its changes are commits there, never patches here.
   - `voile-lkd` is [voile-lkd](https://github.com/Zagrios/voile-lkd), the Linux engine's host programs, with FEX as its own submodule.
   - `neptune` is [Neptune](https://github.com/Zagrios/neptune), the Direct3D driver of the Linux engine and its render server.
-- **Archives**, pinned by URL and SHA-256 in `sources.json`: the CrossOver tarball for FreeType, GnuTLS and GMP, Nettle, Proton, Valve's steamclient libraries for Windows and Linux, Wine Mono and its license, D3DMetal, d3dmetal-native and llvm-mingw, and the Linux engine's zig, Debian root, Debian headers and DXMT. A mismatch stops the build.
+  - `dxmt` is [Zagrios/dxmt](https://github.com/Zagrios/dxmt), Direct3D 11 on Metal for the render server: upstream DXMT, the commits of UTM's native backend it needs, and a Windows-layout `WCHAR`.
+- **Archives**, pinned by URL and SHA-256 in `sources.json`: the CrossOver tarball for FreeType, GnuTLS and GMP, Nettle, Proton, Valve's steamclient libraries for Windows and Linux, Wine Mono and its license, D3DMetal, d3dmetal-native and llvm-mingw, and the Linux engine's zig, Debian root and Debian headers. A mismatch stops the build.
 - **Patches**, `patches/<component>/NNNN-name.patch`, applied in order onto the sources of an archived component, today Proton's `lsteamclient` and UTM's `d3dmetal-native`. A patch that no longer applies stops the build.
 
 Proton's `lsteamclient` and `steam_helper` keep their own licenses. They are downloaded at build time and never copied into this repository.
 
-The `dxmt` and `debian-root` archives, which this repository does not build, are imported like D3DMetal: each import script packs its part into `build/downloads` and prints the release to publish and the checksum for `sources.json`.
+The `debian-root` archive, which this repository does not build, is imported like D3DMetal: its import script packs it into `build/downloads` and prints the release to publish and the checksum for `sources.json`.
 
 ## D3DMetal
 
@@ -190,3 +192,4 @@ Everything in this repository is licensed under the LGPL-2.1-or-later (see `LICE
 | [voile-lkd](https://github.com/Zagrios/voile-lkd) | The Linux engine: x86-64 Linux programs in native macOS processes |
 | [Neptune](https://github.com/Zagrios/neptune) | Direct3D for the Linux engine |
 | [FEX](https://github.com/Zagrios/FEX) | FEX-Emu with its macOS port, which voile-lkd translates x86-64 code with |
+| [dxmt](https://github.com/Zagrios/dxmt) | DXMT, Direct3D 11 on Metal, which Neptune's render server renders with |

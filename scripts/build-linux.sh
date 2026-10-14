@@ -1,15 +1,17 @@
 #!/bin/bash
 # Builds the Linux engine runtime: voile-wine for x86-64 Linux, which the engine runs on macOS arm64, with Proton's
-# Steam bridge, the engine itself (the voile-lkd submodule) and Neptune (the neptune submodule), beside the pinned
-# DXMT, d3dmetal-native, Valve Linux steamclient and Debian root inputs of sources.json. Run build.sh first: the
-# Linux build reuses the Wine build tools of the macOS build, its llvm-mingw and its patched Proton sources.
-# voile-lkd needs cmake, Neptune meson and Python with Mako and PyYAML, all from the caller's PATH. Each step reruns
-# only when its inputs change. Result: build/linux/stage.
+# Steam bridge, the engine itself (the voile-lkd submodule), Neptune (the neptune submodule) and DXMT (the dxmt
+# submodule), beside the pinned d3dmetal-native, Valve Linux steamclient and Debian root inputs of sources.json. Run
+# build.sh first: the Linux build reuses the Wine build tools of the macOS build, its llvm-mingw and its patched
+# Proton sources. voile-lkd needs cmake, Neptune and DXMT meson, Neptune Python with Mako and PyYAML, all from the
+# caller's PATH; DXMT also needs Homebrew's llvm@15 and zstd and Xcode's Metal toolchain. Each step reruns only when
+# its inputs change. Result: build/linux/stage.
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
 WINE_SOURCES="$RUNTIME/wine"
 LKD_SOURCES="$RUNTIME/voile-lkd"
 NEPTUNE_SOURCES="$RUNTIME/neptune"
+DXMT_SOURCES="$RUNTIME/dxmt"
 WORK="$RUNTIME/build"
 DOWNLOADS="$WORK/downloads"
 LINUX="$WORK/linux"
@@ -80,6 +82,8 @@ stamp() {
 [[ -f "$WINE_SOURCES/configure" ]] || fail "The wine submodule is missing: git submodule update --init"
 [[ -f "$LKD_SOURCES/fex/CMakeLists.txt" && -f "$NEPTUNE_SOURCES/scripts/build-server.sh" ]] ||
     fail "The voile-lkd and neptune submodules are missing: git submodule update --init --recursive"
+[[ -f "$DXMT_SOURCES/meson.build" && -f "$DXMT_SOURCES/include/native/directx/dxgi.h" ]] ||
+    fail "The dxmt submodule is missing: git submodule update --init dxmt, then in dxmt: git submodule update --init include/native/directx"
 [[ -x "$WINE_TOOLS/tools/winebuild/winebuild" && -x "$MINGW/bin/ld.lld" && -f "$WORK/stamps/proton-sources" ]] ||
     fail "Build the macOS runtime first (./scripts/build.sh): its Wine tools and llvm-mingw build this one"
 
@@ -129,10 +133,10 @@ WRAPPER
     stamp zig "$key"
 }
 
-# The pinned archives of the parts this repository does not build: DXMT, the Debian root.
+# The pinned archive of the part this repository does not build: the Debian root.
 build_archives() {
     local name archive key
-    for name in dxmt debian-root; do
+    for name in debian-root; do
         archive="$(fetch "$name")"
         key="$(field "$name" sha256)"
         current "$name" "$key" && continue
@@ -383,6 +387,42 @@ build_neptune() {
     stamp neptune "$key"
 }
 
+# DXMT, the arm64 render server's Direct3D 11: upstream DXMT with UTM's native backend and a Windows-layout WCHAR,
+# built as its one native library. Its shader compiler links LLVM 15 statically, from Homebrew's llvm@15, as it links
+# zstd and libunwind: the library needs nothing but macOS on a player's Mac. Obelisk loads it from
+# graphics/dxmt-native.framework/Versions/A/dxmt-native, where UTM's framework used to be.
+build_dxmt() {
+    local key objects="$LINUX/obj/dxmt" out="$LINUX/dxmt" llvm=/opt/homebrew/opt/llvm@15 binary
+    key="$(tree_key "$DXMT_SOURCES")"
+    current dxmt "$key" && return
+    echo "==> DXMT $(git -C "$DXMT_SOURCES" rev-parse --short=12 HEAD)"
+    [[ -f "$llvm/lib/libLLVMCore.a" && -f /opt/homebrew/opt/zstd/lib/libzstd.a ]] ||
+        fail "LLVM 15 is missing: brew install llvm@15 zstd"
+    rm -rf "$objects" "$out"
+    (
+        export PATH="$CALLER_PATH"
+        meson setup "$objects" "$DXMT_SOURCES" --buildtype=release -Dnative_llvm_path="$llvm"
+        nice -n 10 ninja -j "$JOBS" -C "$objects" src/dxmt-native/libdxmt-native.dylib
+    )
+    binary="$out/dxmt-native.framework/Versions/A/dxmt-native"
+    mkdir -p "$(dirname "$binary")" "$out/licenses"
+    cp "$objects/src/dxmt-native/libdxmt-native.dylib" "$binary"
+    ln -s A "$out/dxmt-native.framework/Versions/Current"
+    ln -s Versions/Current/dxmt-native "$out/dxmt-native.framework/dxmt-native"
+    install_name_tool -id @rpath/dxmt-native.framework/dxmt-native "$binary"
+    strip -S "$binary"
+    codesign --force --sign - "$binary"
+    # Anything outside macOS would be missing on a player's Mac.
+    if otool -L "$binary" | tail -n +3 | grep -vE '^[[:space:]]+(/System/Library/|/usr/lib/)'; then
+        fail "DXMT links a library macOS does not have"
+    fi
+    cp "$DXMT_SOURCES/LICENSE" "$out/licenses/dxmt.txt"
+    cp "$DXMT_SOURCES/COPYING.LIB" "$out/licenses/dxmt-COPYING.LIB.txt"
+    printf 'DXMT built from Zagrios/dxmt@%s (https://github.com/Zagrios/dxmt/tree/%s).\n' \
+        "$(git -C "$DXMT_SOURCES" rev-parse HEAD)" "$(git -C "$DXMT_SOURCES" rev-parse HEAD)" > "$out/SOURCE"
+    stamp dxmt "$key"
+}
+
 # UTM's d3dmetal-native, the host interface Apple's D3DMetal expects from its Wine, for a native process: the
 # render server's D3DMetal backend. x86_64 only, like D3DMetal, which it finds through D3DMETAL_FRAMEWORK_PATH; the
 # runtime's lib/external/D3DMetal.framework is the one to name, never a copy. MIT, built from the pinned commit with
@@ -454,6 +494,7 @@ build_zig
 build_archives
 build_lkd
 build_neptune
+build_dxmt
 build_d3dmetal_native
 build_steam_client
 build_sysroot
