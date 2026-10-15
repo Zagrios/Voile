@@ -14,6 +14,7 @@ This repository holds the recipe that builds the runtime from its pinned sources
 - [Releases](#releases)
 - [Sources and pinning](#sources-and-pinning)
 - [D3DMetal](#d3dmetal)
+- [Graphics backends](#graphics-backends)
 - [Tests](#tests)
 - [License](#license)
 - [Related repositories](#related-repositories)
@@ -26,7 +27,7 @@ Voile has two engines, and one release carries both.
 |---|---|---|
 | **Runs** | Every Windows game by default | Games whose anti-cheat supports Linux, such as Easy Anti-Cheat in Rocket League and ELDEN RING |
 | **Wine** | [voile-wine](https://github.com/Zagrios/voile-wine) built for macOS x86_64, under Rosetta | voile-wine built for Linux x86-64, run by [voile-lkd](https://github.com/Zagrios/voile-lkd) in native arm64 processes, with no virtual machine |
-| **Direct3D** | Apple's D3DMetal (10, 11, 12) | [Neptune](https://github.com/Zagrios/neptune), rendering with DXMT (11) or D3DMetal (11, 12) |
+| **Direct3D** | Apple's D3DMetal (11, 12) for 64-bit games, or DXMT (10, 11), which also renders 32-bit games | [Neptune](https://github.com/Zagrios/neptune), rendering with DXMT (11) or D3DMetal (11, 12) |
 | **Steam** | Proton's `lsteamclient` and `steam.exe`, with Valve's `steamclient` libraries | The same, with Valve's Linux `steamclient.so` |
 | **Built by** | `scripts/build.sh` | `scripts/build-linux.sh` |
 
@@ -45,7 +46,7 @@ python3 -m pip install mako pyyaml packaging   # for Neptune, in the Linux engin
 ./scripts/build.sh                   # the macOS engine, in build/stage
 ```
 
-The build downloads the llvm-mingw cross compiler itself. Wine is built for x86_64 and runs under Rosetta, since it executes the game's x86 code in its own process. Each step reruns only when its inputs change.
+The build downloads the llvm-mingw cross compiler itself. Wine is built for x86_64 and runs under Rosetta, since it executes the game's x86 code in its own process. DXMT's unix library links LLVM 15, which the build compiles for x86_64 from LLVM's release sources, as DXMT's own CI does: that step takes cmake from your `PATH`. Its Metal shaders need Xcode's Metal toolchain (`xcodebuild -downloadComponent MetalToolchain`). Each step reruns only when its inputs change.
 
 ## Using a development build
 
@@ -53,6 +54,7 @@ Run a program against a development prefix in `build/prefix`:
 
 ```sh
 ./scripts/wine-dev.sh winecfg
+OBELISK_GRAPHICS=dxmt ./scripts/wine-dev.sh game.exe   # or d3dmetal; Wine's own wined3d otherwise
 ```
 
 To launch Windows games from a development build of Obelisk, install the runtime where Obelisk looks for it, then run Obelisk from its own checkout:
@@ -128,10 +130,10 @@ A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The r
 `package.sh` refuses uncommitted changes, builds both engines, and drops the debug information, which takes the runtime from about 1 GB to 400 MB. Before it finishes, it extracts the archive, runs the 64-bit and 32-bit `cmd.exe` in a new prefix, and runs `cmd` through the Linux engine. The archive holds one folder with:
 
 - the runtime, with Valve's steamclient libraries in `steam/` and Wine Mono in `share/wine/mono`,
-- D3DMetal, laid in after stripping so it stays unmodified, with Apple's notices in `licenses/d3dmetal`,
+- the graphics backends: D3DMetal's DLLs in `lib/d3dmetal` and its framework in `lib/external`, laid in after stripping so they stay unmodified, with Apple's notices in `licenses/d3dmetal`, and DXMT's in `lib/dxmt`,
 - the Linux engine in `linux/`, with its licenses in `licenses/linux`,
 - the licenses of everything it ships, in `licenses/`,
-- `runtime.json`, which names its CrossOver version, its voile, voile-wine and Proton commits, and in `linux` the Linux engine's parts.
+- `runtime.json`, which names its CrossOver version, its voile, voile-wine, Proton and DXMT commits, and in `linux` the Linux engine's parts.
 
 A `-dev` suffix, such as `v26.3.0-13-dev`, packages a local build to try before a release; `publish.sh` refuses it. `publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit. With `--draft`, the release stays a draft, and GitHub creates the tag when it is published.
 
@@ -145,8 +147,8 @@ Obelisk pins the release it installs in its `crates/game-runtime/voile-release.j
   - `wine` is [voile-wine](https://github.com/Zagrios/voile-wine): CrossOver's open-source Wine on its `crossover` branch, Obelisk's changes as commits on `main`. Wine builds straight from this checkout, so a local edit rebuilds it. Its changes are commits there, never patches here.
   - `voile-lkd` is [voile-lkd](https://github.com/Zagrios/voile-lkd), the Linux engine's host programs, with FEX as its own submodule.
   - `neptune` is [Neptune](https://github.com/Zagrios/neptune), the Direct3D driver of the Linux engine and its render server.
-  - `dxmt` is [Zagrios/dxmt](https://github.com/Zagrios/dxmt), Direct3D 11 on Metal for the render server: upstream DXMT, the commits of UTM's native backend it needs, and a Windows-layout `WCHAR`.
-- **Archives**, pinned by URL and SHA-256 in `sources.json`: the CrossOver tarball for FreeType, GnuTLS and GMP, Nettle, Proton, Valve's steamclient libraries for Windows and Linux, Wine Mono and its license, D3DMetal, d3dmetal-native and llvm-mingw, and the Linux engine's zig, Debian root and Debian headers. A mismatch stops the build.
+  - `dxmt` is [Zagrios/dxmt](https://github.com/Zagrios/dxmt), Direct3D 10 and 11 on Metal: upstream DXMT, the commits of UTM's native backend it needs, and a Windows-layout `WCHAR`. `build.sh` builds its Wine DLLs, 32- and 64-bit, and `build-linux.sh` its native library for the render server.
+- **Archives**, pinned by URL and SHA-256 in `sources.json`: the CrossOver tarball for FreeType, GnuTLS and GMP, Nettle, Proton, Valve's steamclient libraries for Windows and Linux, Wine Mono and its license, D3DMetal, LLVM's sources for DXMT, d3dmetal-native and llvm-mingw, and the Linux engine's zig, Debian root and Debian headers. A mismatch stops the build.
 - **Patches**, `patches/<component>/NNNN-name.patch`, applied in order onto the sources of an archived component, today Proton's `lsteamclient` and UTM's `d3dmetal-native`. A patch that no longer applies stops the build.
 
 Proton's `lsteamclient` and `steam_helper` keep their own licenses. They are downloaded at build time and never copied into this repository.
@@ -171,11 +173,35 @@ The build extracts D3DMetal into `build/d3dmetal`, apart from `build/stage`, whi
 OBELISK_GRAPHICS=d3dmetal ./scripts/wine-dev.sh game.exe
 ```
 
-Wine searches its own `lib/wine` before `WINEDLLPATH`, so `wine-dev.sh` clones the runtime and lays D3DMetal's DLLs over Wine's. `CX_APPLEGPTK_LIBD3DSHARED_PATH` makes CrossOver's Wine preload `libd3dshared.dylib`, which D3DMetal's unix libraries need. `install-dev.sh` lays the same DLLs over the installed runtime.
+## Graphics backends
+
+The macOS engine has two backends for Direct3D 10 to 12, each in its own folder beside Wine's `lib/wine`, never over it:
+
+| Folder | Backend | Renders |
+|---|---|---|
+| `lib/d3dmetal` | Apple's D3DMetal (`x86_64-windows`, `x86_64-unix`), with its framework in `lib/external` | Direct3D 11 and 12, 64-bit programs only |
+| `lib/dxmt` | DXMT (`i386-windows`, `x86_64-windows`, and `x86_64-unix/winemetal.so` for both) | Direct3D 10 and 11, 32- and 64-bit programs |
+
+Without either, a game gets Wine's own wined3d, which stops at Direct3D 11's feature level 10_1 on macOS. dxgi is one per process, so a game has one backend: on DXMT it has no Direct3D 12.
+
+voile-wine searches the folders `WINEDLLPATH_PREPEND` names, in order, before its own `lib/wine`, as CrossOver puts a bottle's backend ahead of Wine's DLLs. Obelisk names the backend a game's launch settings pick:
+
+- D3DMetal: `lib/d3dmetal:lib/dxmt`. 64-bit programs find D3DMetal's DLLs; 32-bit ones, which D3DMetal has none for, find DXMT's.
+- DXMT: `lib/dxmt`.
+
+Wine loads one of these DLLs only through its placeholder in the prefix, the file `wineboot` copies into `system32` and `syswow64` for each DLL of the folders it searches. Obelisk runs `wineboot` with every backend's folder, and updates a prefix once when its runtime brings a new backend. Obelisk also sets:
+
+- `CX_APPLEGPTK_LIBD3DSHARED_PATH`, which makes CrossOver's Wine preload `libd3dshared.dylib`, which D3DMetal's unix libraries need.
+- `D3DMETAL_FRAMEWORK_PATH`, the framework's binary, `lib/external/D3DMetal.framework/D3DMetal`. Outside the layout of Apple's toolkit, D3DMetal's unix libraries do not find their framework by themselves.
+- `CX_ACTIVE_GRAPHICS_BACKEND`, `d3dmetal` or `dxmt`. voile-wine reports the hardware scheduling Direct3D 12 expects for D3DMetal alone.
+- D3DMetal's options. With ray tracing off, `D3DM_SUPPORT_DXR=0`: D3DMetal 4.0 offers ray tracing tier 1.1 by default.
+
+DLSS is not supported yet. D3DMetal's `nvngx-on-metalfx` answers DLSS through MetalFX once a game loads it as `nvngx.dll`, but games find `nvngx.dll` through the folder `HKLM\SOFTWARE\NVIDIA Corporation\Global\NGXCore` names, and D3DMetal's DXGI factory erases that value unless, with `D3DM_ENABLE_METALFX`, it locates `nvngx.dll` itself, which it does not do in voile-wine.
 
 ## Tests
 
-- `tests/d3d11-smoke.c` presents 120 frames and prints the adapter and feature level it got. wined3d stops at 10_1; D3DMetal reports "AMD Compatibility Mode" at 11_0.
+- `tests/d3d11-smoke.c` presents 120 frames and prints the adapter and feature level it got. wined3d stops at 10_1; D3DMetal reports "AMD Compatibility Mode" at 11_0, and DXMT the Mac's GPU at 11_0, built 32-bit as well as 64-bit.
+- `tests/d3d12-features.c` prints what a Direct3D 12 game learns before it picks its features: the adapter and its vendor and device ids, the ray tracing tier, and whether DLSS answers through `nvngx.dll`, found as NVIDIA's loader finds it.
 - `tests/mf-video-smoke.c` plays a movie through Media Foundation's source reader, as games do, and prints the formats it found and what it decoded. Given the colour of the movie's first frame, it also checks the pixels.
 - `tests/mf-h264-decoder.c` decodes an H.264 byte stream through Media Foundation's H.264 decoder transform, as engines that read the movie file themselves do. Given the luma of the first frame's centre, it also checks the pixels. On macOS the decoder offers no NV12, which CrossOver's Wine leaves out there.
 - `tests/wow64-force-exec.c` is a 32-bit program that forces exec permission, as Wine's loader does for a module without NX_COMPAT, then makes a few syscalls and exits 0. A runtime that loses the syscall dispatcher page at that point dies with "stack overflow" instead.
@@ -194,4 +220,4 @@ Everything in this repository is licensed under the GNU General Public License v
 | [voile-lkd](https://github.com/Zagrios/voile-lkd) | The Linux engine: x86-64 Linux programs in native macOS processes |
 | [Neptune](https://github.com/Zagrios/neptune) | Direct3D for the Linux engine |
 | [FEX](https://github.com/Zagrios/FEX) | FEX-Emu with its macOS port, which voile-lkd translates x86-64 code with |
-| [dxmt](https://github.com/Zagrios/dxmt) | DXMT, Direct3D 11 on Metal, which Neptune's render server renders with |
+| [dxmt](https://github.com/Zagrios/dxmt) | DXMT, Direct3D 10 and 11 on Metal, for the macOS engine and Neptune's render server |

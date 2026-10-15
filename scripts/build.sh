@@ -4,6 +4,7 @@
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
 WINE_SOURCES="$RUNTIME/wine"
+DXMT_SOURCES="$RUNTIME/dxmt"
 WORK="$RUNTIME/build"
 DOWNLOADS="$WORK/downloads"
 SOURCES="$WORK/src"
@@ -14,14 +15,18 @@ DEPS="$WORK/deps"
 FREETYPE_PREFIX="$DEPS/freetype"
 GNUTLS_PREFIX="$DEPS/gnutls"
 GSTREAMER_PREFIX="$DEPS/gstreamer"
+LLVM_PREFIX="$DEPS/llvm"
 MACOS_PKGCONFIG="$DEPS/macos/pkgconfig"
 OBJECTS="$WORK/obj"
 STAGE="$WORK/stage"
 STEAM_WINDOWS="$WORK/steam-windows"
 D3DMETAL="$WORK/d3dmetal"
+DXMT="$WORK/dxmt"
 TOOLCHAIN="$WORK/toolchain/llvm-mingw"
 JOBS="$(sysctl -n hw.ncpu)"
 export MACOSX_DEPLOYMENT_TARGET=26.0
+# LLVM's build takes cmake from the caller's PATH, such as build/pyenv's.
+CALLER_PATH="$PATH"
 # Build tools may stay arm64. Everything Wine loads is compiled for x86_64.
 # llvm-mingw comes last: its bare clang must not shadow Xcode's.
 export PATH="/opt/homebrew/opt/bison/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$TOOLCHAIN/bin"
@@ -57,6 +62,13 @@ GSTREAMER_MODULES=(
     "gst-plugins-bad -Dapplemedia=enabled -Dvideoparsers=enabled -Dgl=enabled"
     "gst-plugins-ugly -Dasfdemux=enabled"
 )
+# DXMT's shader compiler needs LLVM 15's libraries, which it links into its
+# unix library: no tools, no code generator and no optional dependency.
+LLVM_OPTIONS=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64
+    -DLLVM_HOST_TRIPLE=x86_64-apple-darwin -DLLVM_TARGETS_TO_BUILD= -DLLVM_BUILD_TOOLS=OFF
+    -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF
+    -DLLVM_INCLUDE_DOCS=OFF -DLLVM_ENABLE_BINDINGS=OFF -DLLVM_ENABLE_ZLIB=OFF -DLLVM_ENABLE_ZSTD=OFF
+    -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_LIBXML2=OFF -DLLVM_ENABLE_LIBEDIT=OFF)
 WINE_OPTIONS=(--enable-archs=i386,x86_64 --disable-tests --without-x --with-gstreamer
     --without-sdl --without-vulkan)
 # Proton's Steam modules. Every other patches/ folder applies to the CrossOver tarball, except the Linux engine's,
@@ -311,6 +323,27 @@ build_gnutls() {
     stamp gnutls "$GNUTLS_KEY"
 }
 
+# LLVM comes from its release sources, the way DXMT's own CI builds it, for
+# x86_64: Homebrew's is arm64.
+build_llvm() {
+    local archive sources="$OBJECTS/llvm-src" cmake
+    archive="$(fetch llvm)"
+    LLVM_KEY="$(field llvm sha256) ${LLVM_OPTIONS[*]}"
+    current llvm "$LLVM_KEY" && return
+    echo "==> LLVM"
+    cmake="$(PATH="$CALLER_PATH" command -v cmake)" ||
+        fail "cmake is missing: put build/pyenv/bin, or Homebrew's cmake, on PATH"
+    rm -rf "$sources" "$OBJECTS/llvm" "$LLVM_PREFIX"
+    mkdir -p "$sources"
+    tar -xJf "$archive" -C "$sources" --strip-components 1 --include '*.src/llvm/*' \
+        --include '*.src/cmake/*'
+    "$cmake" -S "$sources/llvm" -B "$OBJECTS/llvm" -G Ninja -DCMAKE_INSTALL_PREFIX="$LLVM_PREFIX" \
+        "${LLVM_OPTIONS[@]}"
+    "$cmake" --build "$OBJECTS/llvm"
+    "$cmake" --install "$OBJECTS/llvm"
+    stamp llvm "$LLVM_KEY"
+}
+
 # GStreamer backs winegstreamer: Media Foundation, DirectShow and WMReader, so
 # games play their videos. GStreamer comes from the CrossOver tarball. glib is
 # GNOME's latest release of the series that tarball carries, which also holds
@@ -466,6 +499,47 @@ build_wine() {
     stamp wine "$WINE_KEY"
 }
 
+# DXMT renders Direct3D 10 and 11 through Metal. It runs the 32-bit games
+# D3DMetal cannot, and the 64-bit ones a player moves to it. It builds against
+# this Wine's tree and goes in the stage's lib/dxmt, beside Wine's own DLLs,
+# never over them: Obelisk puts its folder first for the games that use it.
+# The stage is rebuilt with Wine, so DXMT is rebuilt after each Wine build.
+build_dxmt() {
+    local key bits objects winemetal rpaths path
+    key="$(git -C "$DXMT_SOURCES" rev-parse HEAD)-$({ git -C "$DXMT_SOURCES" diff HEAD
+        git -C "$DXMT_SOURCES" submodule status --recursive; } | shasum -a 256 | cut -c1-16)"
+    key+=" $LLVM_KEY $WINE_KEY"
+    current dxmt "$key" && return
+    echo "==> DXMT $(git -C "$DXMT_SOURCES" rev-parse --short=12 HEAD)"
+    rm -rf "$DXMT" "$STAGE/lib/dxmt"
+    # The 64-bit build also makes winemetal.so, which serves both.
+    for bits in 64 32; do
+        objects="$OBJECTS/dxmt-win$bits"
+        rm -rf "$objects"
+        meson setup "$objects" "$DXMT_SOURCES" --cross-file "$DXMT_SOURCES/build-win$bits.txt" \
+            --buildtype release --prefix "$DXMT" -Dnative_llvm_path="$LLVM_PREFIX" \
+            -Dwine_build_path="$OBJECTS/wine"
+        meson install -C "$objects"
+    done
+    # winemetal.so links Wine's winemac.so and ntdll.so by @rpath, which the
+    # build points at its own folder and its parent's parent.
+    winemetal="$DXMT/x86_64-unix/winemetal.so"
+    rpaths="$(otool -l "$winemetal" | awk '/cmd LC_RPATH$/ { getline; getline; print $2 }')"
+    while read -r path; do
+        [[ -z "$path" ]] || install_name_tool -delete_rpath "$path" "$winemetal"
+    done <<< "$rpaths"
+    install_name_tool -add_rpath @loader_path/../../wine/x86_64-unix "$winemetal"
+    codesign --force --sign - "$winemetal"
+    if otool -l "$winemetal" | tail -n +2 | grep -q "$WORK"; then
+        fail "winemetal.so still points into the build tree"
+    fi
+    # The DLLs and winemetal.so, without the import libraries meson installs.
+    mkdir -p "$STAGE/lib/dxmt"
+    cp -R "$DXMT/i386-windows" "$DXMT/x86_64-windows" "$DXMT/x86_64-unix" "$STAGE/lib/dxmt/"
+    find "$STAGE/lib/dxmt" -name '*.a' -delete
+    stamp dxmt "$key"
+}
+
 # Builds one of Proton's modules against this Wine the way Proton's
 # make/rules-makedep.mk does: Wine's own Makefile variables, the module as the
 # only subdirectory, and Wine's makedep for the rules. It installs into the stage.
@@ -535,7 +609,8 @@ build_mono() {
 }
 
 # D3DMetal stays out of the stage, which remains Wine's own: package.sh lays it
-# over the runtime unmodified, and wine-dev.sh and install-dev.sh over theirs.
+# beside the runtime's DLLs unmodified, and wine-dev.sh and install-dev.sh
+# beside theirs.
 build_d3dmetal() {
     local archive key
     archive="$(fetch d3dmetal)"
@@ -554,8 +629,10 @@ build_proton_sources
 build_freetype
 build_gnutls
 build_gstreamer
+build_llvm
 build_wine
 lay_gstreamer
+build_dxmt
 build_steam
 build_steam_windows
 build_mono

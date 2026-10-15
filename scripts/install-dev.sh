@@ -1,6 +1,6 @@
 #!/bin/bash
 # Installs the locally built runtime where a development build of Obelisk looks
-# for it, with the D3DMetal the build extracted.
+# for it, with the D3DMetal the build extracted, laid as package.sh lays it.
 # Released builds of Obelisk will download their runtime instead.
 set -euo pipefail
 WORK="$(cd "$(dirname "$0")/.." && pwd)/build"
@@ -15,7 +15,8 @@ rm -rf "$DESTINATION"
 mkdir -p "$(dirname "$DESTINATION")"
 cp -cR "$WORK/stage" "$DESTINATION"
 if [[ -f "$WORK/d3dmetal/VERSION" ]]; then
-    ditto "$WORK/d3dmetal/lib" "$DESTINATION/lib"
+    ditto "$WORK/d3dmetal/lib/external" "$DESTINATION/lib/external"
+    ditto "$WORK/d3dmetal/lib/wine" "$DESTINATION/lib/d3dmetal"
 fi
 mkdir -p "$DESTINATION/steam"
 cp "$WORK/steam-windows/steamclient.dll" "$WORK/steam-windows/steamclient64.dll" "$DESTINATION/steam/"

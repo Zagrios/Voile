@@ -45,9 +45,9 @@ done
 # which points into this build tree, and are signed again.
 strip_debug() {
     local binary
-    find "$PACKAGE/lib/wine" -path '*-windows/*' -type f -print0 |
+    find "$PACKAGE/lib/wine" "$PACKAGE/lib/dxmt" -path '*-windows/*' -type f -print0 |
         xargs -0 -n 64 -P "$JOBS" "$STRIP" --strip-debug
-    for binary in "$PACKAGE"/bin/* "$PACKAGE"/lib/wine/x86_64-unix/*; do
+    for binary in "$PACKAGE"/bin/* "$PACKAGE"/lib/wine/x86_64-unix/* "$PACKAGE"/lib/dxmt/x86_64-unix/*; do
         codesign --remove-signature "$binary"
         strip -S "$binary"
         codesign --sign - "$binary"
@@ -55,9 +55,12 @@ strip_debug() {
 }
 
 # Apple's license forbids modifying D3DMetal, so it goes in after stripping:
-# its unix libraries link to libd3dshared.dylib, which strip would follow.
+# its unix libraries link to libd3dshared.dylib, which strip would follow. Its
+# DLLs go in lib/d3dmetal, beside Wine's own, as DXMT's go in lib/dxmt: Obelisk
+# puts the folder of a game's graphics backend first in Wine's DLL search.
 add_d3dmetal() {
-    ditto "$WORK/d3dmetal/lib" "$PACKAGE/lib"
+    ditto "$WORK/d3dmetal/lib/external" "$PACKAGE/lib/external"
+    ditto "$WORK/d3dmetal/lib/wine" "$PACKAGE/lib/d3dmetal"
 }
 
 # The Linux engine's runtime: the engine, the render servers with DXMT and
@@ -88,6 +91,9 @@ copy_licenses() {
     cp "$WORK/src-gnome/glib/COPYING" "$licenses/glib.txt"
     cp "$WORK/src-gnome/glib/subprojects/pcre2-10.42/LICENCE" "$licenses/pcre2.txt"
     cp "$WORK/src-gnome/glib/subprojects/proxy-libintl/COPYING" "$licenses/proxy-libintl.txt"
+    cp "$RUNTIME/dxmt/LICENSE" "$licenses/dxmt.txt"
+    cp "$RUNTIME/dxmt/COPYING.LIB" "$licenses/dxmt-COPYING.LIB.txt"
+    cp "$WORK/obj/llvm-src/llvm/LICENSE.TXT" "$licenses/llvm.txt"
     mkdir -p "$licenses/gstreamer"
     for module in gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly; do
         cp "$WORK/src/gstreamer/subprojects/$module/COPYING" "$licenses/gstreamer/$module.txt"
@@ -116,6 +122,8 @@ write_manifest() {
   "wine-mono": "$(basename "$(field wine-mono url)" -x86.tar.xz | sed 's/^wine-mono-//')",
   "gstreamer": "$(PKG_CONFIG_LIBDIR="$WORK/deps/gstreamer/lib/pkgconfig" pkg-config --modversion gstreamer-1.0)",
   "glib": "$(basename "$(field glib url)" .tar.xz | sed 's/^glib-//')",
+  "dxmt": "$(git -C "$RUNTIME/dxmt" rev-parse HEAD)",
+  "llvm": "$(basename "$(field llvm url)" .src.tar.xz | sed 's/^llvm-project-//')",
   "d3dmetal": "$(cat "$WORK/d3dmetal/VERSION")",
   "linux": {
     "voile-lkd": "$(plutil -extract voile-lkd raw -o - "$WORK/linux/lkd/VERSION.json")",

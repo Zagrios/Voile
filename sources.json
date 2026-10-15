@@ -35,6 +35,10 @@
     "url": "https://github.com/frida/proxy-libintl/archive/refs/tags/0.4.tar.gz",
     "sha256": "13ef3eea0a3bc0df55293be368dfbcff5a8dd5f4759280f28e030d1494a5dffb"
   },
+  "llvm": {
+    "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.7/llvm-project-15.0.7.src.tar.xz",
+    "sha256": "8b5fcb24b4128cf04df1b0b9410ce8b1a729cb3c544e6da885d234280dedeac6"
+  },
   "d3dmetal": {
     "url": "https://github.com/Zagrios/voile/releases/download/d3dmetal-4.0-beta2/d3dmetal-4.0-beta2.tar.xz",
     "sha256": "5ef3adc422b0c5b6958c2702afe6170e7e7b47680dce70194ff9dffdd40d2965"
