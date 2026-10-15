@@ -19,6 +19,22 @@
     "url": "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz",
     "sha256": "b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c"
   },
+  "glib": {
+    "url": "https://download.gnome.org/sources/glib/2.78/glib-2.78.6.tar.xz",
+    "sha256": "244854654dd82c7ebcb2f8e246156d2a05eb9cd1ad07ed7a779659b4602c9fae"
+  },
+  "pcre2": {
+    "url": "https://github.com/PhilipHazel/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.bz2",
+    "sha256": "8d36cd8cb6ea2a4c2bb358ff6411b0c788633a2a45dabbf1aeb4b701d1b5e840"
+  },
+  "pcre2-meson": {
+    "url": "https://wrapdb.mesonbuild.com/v2/pcre2_10.42-2/get_patch",
+    "sha256": "350dc342b81a1611af43e5cc23f1b10453c7df51d5bb60ab9ee247daf03802bc"
+  },
+  "proxy-libintl": {
+    "url": "https://github.com/frida/proxy-libintl/archive/refs/tags/0.4.tar.gz",
+    "sha256": "13ef3eea0a3bc0df55293be368dfbcff5a8dd5f4759280f28e030d1494a5dffb"
+  },
   "d3dmetal": {
     "url": "https://github.com/Zagrios/voile/releases/download/d3dmetal-4.0-beta2/d3dmetal-4.0-beta2.tar.xz",
     "sha256": "5ef3adc422b0c5b6958c2702afe6170e7e7b47680dce70194ff9dffdd40d2965"

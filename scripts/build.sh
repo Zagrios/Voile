@@ -8,9 +8,13 @@ WORK="$RUNTIME/build"
 DOWNLOADS="$WORK/downloads"
 SOURCES="$WORK/src"
 PROTON_SOURCES="$WORK/src-proton"
+GNOME_SOURCES="$WORK/src-gnome"
+GLIB_SOURCES="$GNOME_SOURCES/glib"
 DEPS="$WORK/deps"
 FREETYPE_PREFIX="$DEPS/freetype"
 GNUTLS_PREFIX="$DEPS/gnutls"
+GSTREAMER_PREFIX="$DEPS/gstreamer"
+MACOS_PKGCONFIG="$DEPS/macos/pkgconfig"
 OBJECTS="$WORK/obj"
 STAGE="$WORK/stage"
 STEAM_WINDOWS="$WORK/steam-windows"
@@ -21,8 +25,10 @@ export MACOSX_DEPLOYMENT_TARGET=26.0
 # Build tools may stay arm64. Everything Wine loads is compiled for x86_64.
 # llvm-mingw comes last: its bare clang must not shadow Xcode's.
 export PATH="/opt/homebrew/opt/bison/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$TOOLCHAIN/bin"
-# pkg-config sees only the x86_64 libraries built here, never Homebrew's arm64 ones.
+# pkg-config sees only the x86_64 libraries built here and macOS's own, never
+# Homebrew's arm64 ones.
 export PKG_CONFIG_LIBDIR="$FREETYPE_PREFIX/lib/pkgconfig:$GNUTLS_PREFIX/lib/pkgconfig"
+PKG_CONFIG_LIBDIR+=":$GSTREAMER_PREFIX/lib/pkgconfig:$MACOS_PKGCONFIG"
 
 FREETYPE_OPTIONS=(-Dbrotli=disabled -Dbzip2=disabled -Dharfbuzz=disabled -Dpng=disabled
     -Dzlib=internal)
@@ -30,12 +36,34 @@ GNUTLS_OPTIONS=(--enable-shared --disable-static --with-included-libtasn1
     --with-included-unistring --without-p11-kit --without-idn --without-zlib --without-brotli
     --without-zstd --without-tpm --without-tpm2 --disable-tools --disable-doc --disable-tests
     --disable-cxx --disable-nls --disable-libdane --disable-openssl-compatibility)
-WINE_OPTIONS=(--enable-archs=i386,x86_64 --disable-tests --without-x --without-gstreamer
+GLIB_OPTIONS=(-Dtests=false -Dnls=disabled -Dlibelf=disabled -Dselinux=disabled
+    -Dlibmount=disabled -Dglib_debug=disabled)
+# The GStreamer plugins CrossOver ships, from which winegstreamer builds the
+# pipelines behind Media Foundation, DirectShow and WMReader. macOS decodes:
+# applemedia's vtdec (VideoToolbox) and atdec (AudioToolbox). Without FFmpeg,
+# WMV and WMA demux but do not decode, as in CrossOver.
+GSTREAMER_PLUGINS=(coreelements audioconvert audioresample opengl playback typefindfunctions
+    videoconvertscale audioparsers avi deinterlace id3demux isomp4 videofilter wavparse
+    applemedia videoparsersbad asf)
+# Each module builds only what those plugins need. Core keeps its tools, such as
+# gst-inspect-1.0, for development: the runtime does not ship them.
+GSTREAMER_MODULES=(
+    "gstreamer -Dtools=enabled"
+    "gst-plugins-base -Daudioconvert=enabled -Daudioresample=enabled -Dplayback=enabled
+        -Dtypefind=enabled -Dvideoconvertscale=enabled -Dgl=enabled -Dgl_api=opengl
+        -Dgl_platform=cgl -Dgl_winsys=cocoa"
+    "gst-plugins-good -Daudioparsers=enabled -Davi=enabled -Ddeinterlace=enabled
+        -Did3demux=enabled -Disomp4=enabled -Dvideofilter=enabled -Dwavparse=enabled"
+    "gst-plugins-bad -Dapplemedia=enabled -Dvideoparsers=enabled -Dgl=enabled"
+    "gst-plugins-ugly -Dasfdemux=enabled"
+)
+WINE_OPTIONS=(--enable-archs=i386,x86_64 --disable-tests --without-x --with-gstreamer
     --without-sdl --without-vulkan)
 # Proton's Steam modules. Every other patches/ folder applies to the CrossOver tarball, except the Linux engine's,
-# which build-linux.sh applies.
+# which build-linux.sh applies, and glib's, which applies to GNOME's release.
 PROTON_COMPONENTS=(lsteamclient steam_helper)
 LINUX_COMPONENTS=(d3dmetal-native)
+GNOME_COMPONENTS=(glib)
 
 fail() {
     echo "$*" >&2
@@ -93,6 +121,7 @@ crossover_components() {
         [[ -d "$directory" ]] || continue
         is_proton_component "$(basename "$directory")" && continue
         [[ " ${LINUX_COMPONENTS[*]} " == *" $(basename "$directory") "* ]] && continue
+        [[ " ${GNOME_COMPONENTS[*]} " == *" $(basename "$directory") "* ]] && continue
         basename "$directory"
     done
 }
@@ -193,15 +222,18 @@ build_proton_sources() {
     stamp proton-sources "$PROTON_KEY"
 }
 
-build_freetype() {
-    FREETYPE_KEY="$(field crossover sha256)-$(patches_key freetype) ${FREETYPE_OPTIONS[*]}"
-    current freetype "$FREETYPE_KEY" && return
-    echo "==> freetype"
+# Meson builds x86_64 libraries with arm64 build tools. Rosetta runs the x86_64
+# programs a build runs, such as its compiler checks.
+cross_file() {
     cat > "$WORK/x86_64-darwin.ini" <<'EOF'
 [binaries]
 c = ['clang', '-arch', 'x86_64']
+cpp = ['clang++', '-arch', 'x86_64']
+objc = ['clang', '-arch', 'x86_64']
+objcpp = ['clang++', '-arch', 'x86_64']
 ar = 'ar'
 strip = 'strip'
+pkg-config = 'pkg-config'
 
 [properties]
 needs_exe_wrapper = false
@@ -212,6 +244,13 @@ cpu_family = 'x86_64'
 cpu = 'x86_64'
 endian = 'little'
 EOF
+}
+
+build_freetype() {
+    FREETYPE_KEY="$(field crossover sha256)-$(patches_key freetype) ${FREETYPE_OPTIONS[*]}"
+    current freetype "$FREETYPE_KEY" && return
+    echo "==> freetype"
+    cross_file
     rm -rf "$OBJECTS/freetype" "$FREETYPE_PREFIX"
     meson setup "$OBJECTS/freetype" "$SOURCES/freetype" --cross-file "$WORK/x86_64-darwin.ini" \
         --prefix "$FREETYPE_PREFIX" --libdir lib --buildtype release --default-library shared \
@@ -272,8 +311,137 @@ build_gnutls() {
     stamp gnutls "$GNUTLS_KEY"
 }
 
+# GStreamer backs winegstreamer: Media Foundation, DirectShow and WMReader, so
+# games play their videos. GStreamer comes from the CrossOver tarball. glib is
+# GNOME's latest release of the series that tarball carries, which also holds
+# its gvdb subproject, built with the pcre2 and proxy-libintl its wraps name.
+# macOS provides libffi, zlib and iconv.
+build_gstreamer() {
+    local glib pcre2 pcre2_build proxy_libintl module words name
+    glib="$(fetch glib)"
+    pcre2="$(fetch pcre2)"
+    pcre2_build="$(fetch pcre2-meson)"
+    proxy_libintl="$(fetch proxy-libintl)"
+    GSTREAMER_KEY="$(field crossover sha256)-$(field glib sha256)-$(field pcre2 sha256)"
+    GSTREAMER_KEY+="-$(field pcre2-meson sha256)-$(field proxy-libintl sha256)"
+    GSTREAMER_KEY+="-$(patches_key "${GNOME_COMPONENTS[@]}")"
+    GSTREAMER_KEY+=" ${GLIB_OPTIONS[*]} ${GSTREAMER_MODULES[*]}"
+    current gstreamer "$GSTREAMER_KEY" && return
+    echo "==> GStreamer"
+    cross_file
+    rm -rf "$GSTREAMER_PREFIX" "$MACOS_PKGCONFIG"
+    mkdir -p "$MACOS_PKGCONFIG"
+    # macOS keeps libffi in /usr/lib, with its headers in the SDK, but no .pc file.
+    cat > "$MACOS_PKGCONFIG/libffi.pc" <<EOF
+Name: libffi
+Description: macOS's libffi
+Version: 3.4.0
+Cflags: -I$(xcrun --show-sdk-path)/usr/include/ffi
+Libs: -lffi
+EOF
+    # glib's wraps find their archives in its packagecache, under the names
+    # pcre2.wrap gives them, and proxy-libintl in its folder, so meson
+    # downloads nothing.
+    local subprojects="$GLIB_SOURCES/subprojects"
+    rm -rf "$GLIB_SOURCES"
+    mkdir -p "$GLIB_SOURCES"
+    tar -xJf "$glib" -C "$GLIB_SOURCES" --strip-components 1
+    apply_patches "$GNOME_SOURCES" "${GNOME_COMPONENTS[@]}"
+    mkdir -p "$subprojects/packagecache" "$subprojects/proxy-libintl"
+    cp "$pcre2" "$subprojects/packagecache/pcre2-10.42.tar.bz2"
+    cp "$pcre2_build" "$subprojects/packagecache/pcre2_10.42-2_patch.zip"
+    tar -xzf "$proxy_libintl" -C "$subprojects/proxy-libintl" --strip-components 1
+    rm -rf "$OBJECTS/glib"
+    meson setup "$OBJECTS/glib" "$GLIB_SOURCES" --cross-file "$WORK/x86_64-darwin.ini" \
+        --prefix "$GSTREAMER_PREFIX" --libdir lib --buildtype release --default-library shared \
+        --wrap-mode nodownload --force-fallback-for libpcre2-8,intl "${GLIB_OPTIONS[@]}"
+    meson install -C "$OBJECTS/glib"
+    # The modules run glib's tools, such as glib-mkenums, from PATH.
+    for module in "${GSTREAMER_MODULES[@]}"; do
+        read -r -d '' -a words <<< "$module" || true
+        name="${words[0]}"
+        rm -rf "$OBJECTS/$name"
+        PATH="$GSTREAMER_PREFIX/bin:$PATH" meson setup "$OBJECTS/$name" \
+            "$SOURCES/gstreamer/subprojects/$name" --cross-file "$WORK/x86_64-darwin.ini" \
+            --prefix "$GSTREAMER_PREFIX" --libdir lib --buildtype release --default-library shared \
+            --wrap-mode nodownload -Dauto_features=disabled "${words[@]:1}"
+        PATH="$GSTREAMER_PREFIX/bin:$PATH" meson install -C "$OBJECTS/$name"
+    done
+    stamp gstreamer "$GSTREAMER_KEY"
+}
+
+# Lays GStreamer beside Wine: the plugins in lib/gstreamer-1.0, which GStreamer
+# finds from its own library, and the libraries winegstreamer and the plugins
+# load in lib. Each finds the others through @rpath, never in this build tree.
+# The stage is rebuilt with Wine, so GStreamer goes back in after each Wine build.
+lay_gstreamer() {
+    local key="$WINE_KEY ${GSTREAMER_PLUGINS[*]}"
+    current gstreamer-stage "$key" && return
+    echo "==> GStreamer in the runtime"
+    local plugins="$STAGE/lib/gstreamer-1.0" plugin binary dependency leaf
+    local pending=("$STAGE/lib/wine/x86_64-unix/winegstreamer.so") laid=()
+    rm -rf "$plugins" "$STAGE"/lib/*.dylib
+    mkdir -p "$plugins"
+    for plugin in "${GSTREAMER_PLUGINS[@]}"; do
+        cp "$GSTREAMER_PREFIX/lib/gstreamer-1.0/libgst$plugin.dylib" "$plugins/"
+        pending+=("$plugins/libgst$plugin.dylib")
+    done
+    laid=("${pending[@]}")
+    while ((${#pending[@]})); do
+        binary="${pending[0]}"
+        pending=("${pending[@]:1}")
+        while read -r dependency; do
+            leaf="${dependency##*/}"
+            [[ -f "$STAGE/lib/$leaf" || -f "$STAGE/lib/wine/x86_64-unix/$leaf" ]] && continue
+            [[ -f "$GSTREAMER_PREFIX/lib/$leaf" ]] ||
+                fail "${binary##*/} links $dependency, which the GStreamer build lacks"
+            cp "$GSTREAMER_PREFIX/lib/$leaf" "$STAGE/lib/$leaf"
+            pending+=("$STAGE/lib/$leaf")
+            laid+=("$STAGE/lib/$leaf")
+        done < <(linked_libraries "$binary" | grep -v -E '^(/System/|/usr/lib/)')
+    done
+    for binary in "${laid[@]}"; do
+        case "$binary" in
+            */x86_64-unix/*) relink "$binary" @loader_path/../.. ;;
+            "$plugins"/*) relink "$binary" @loader_path/.. ;;
+            *) relink "$binary" @loader_path ;;
+        esac
+    done
+    stamp gstreamer-stage "$key"
+}
+
+# The libraries a Mach-O file loads, as its load commands name them.
+linked_libraries() {
+    otool -l "$1" | awk '/cmd LC_(LOAD|LOAD_WEAK|REEXPORT)_DYLIB$/ { getline; getline; print $2 }'
+}
+
+# Makes one laid file name itself and the GStreamer libraries it links by
+# @rpath, and find them from `rpath` instead of this build tree. The rpaths it
+# had relative to itself stay, such as winegstreamer.so's to Wine's ntdll.so.
+relink() {
+    local binary="$1" rpath="$2" dependency path rpaths arguments=()
+    if otool -l "$binary" | grep -q 'cmd LC_ID_DYLIB$'; then
+        arguments+=(-id "@rpath/${binary##*/}")
+    fi
+    while read -r dependency; do
+        if [[ "$dependency" == "$GSTREAMER_PREFIX"/* ]]; then
+            arguments+=(-change "$dependency" "@rpath/${dependency##*/}")
+        fi
+    done < <(linked_libraries "$binary")
+    rpaths="$(otool -l "$binary" | awk '/cmd LC_RPATH$/ { getline; getline; print $2 }')"
+    while read -r path; do
+        [[ "$path" == /* ]] && arguments+=(-delete_rpath "$path")
+    done <<< "$rpaths"
+    grep -q -x -F "$rpath" <<< "$rpaths" || arguments+=(-add_rpath "$rpath")
+    ((${#arguments[@]})) && install_name_tool "${arguments[@]}" "$binary"
+    codesign --force --sign - "$binary"
+    if otool -l "$binary" | tail -n +2 | grep -q "$WORK"; then
+        fail "${binary##*/} still points into the build tree"
+    fi
+}
+
 build_wine() {
-    WINE_KEY="$WINE_SOURCE_KEY $FREETYPE_KEY $GNUTLS_KEY ${WINE_OPTIONS[*]}"
+    WINE_KEY="$WINE_SOURCE_KEY $FREETYPE_KEY $GNUTLS_KEY $GSTREAMER_KEY ${WINE_OPTIONS[*]}"
     current wine "$WINE_KEY" && return
     echo "==> Wine $(git -C "$WINE_SOURCES" rev-parse --short=12 HEAD)"
     rm -rf "$OBJECTS/wine" "$STAGE"
@@ -385,7 +553,9 @@ build_sources
 build_proton_sources
 build_freetype
 build_gnutls
+build_gstreamer
 build_wine
+lay_gstreamer
 build_steam
 build_steam_windows
 build_mono

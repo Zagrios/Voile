@@ -30,7 +30,7 @@ Voile has two engines, and one release carries both.
 | **Steam** | Proton's `lsteamclient` and `steam.exe`, with Valve's `steamclient` libraries | The same, with Valve's Linux `steamclient.so` |
 | **Built by** | `scripts/build.sh` | `scripts/build-linux.sh` |
 
-The macOS engine also ships FreeType and GnuTLS, which backs Windows HTTPS, built for x86_64 beside Wine's unix libraries, and Wine Mono for .NET games. Both engines share `obelisk-input`, voile-lkd's gamepad service, which voile-wine's `winebus.sys` reads.
+The macOS engine also ships FreeType and GnuTLS, which backs Windows HTTPS, built for x86_64 beside Wine's unix libraries, and Wine Mono for .NET games. It ships GStreamer too, with the plugins CrossOver ships, so games play their videos and sounds through Media Foundation, DirectShow and WMReader: macOS decodes them with VideoToolbox (H.264, HEVC, MPEG-2) and AudioToolbox (AAC, MP3). Like CrossOver, it has no FFmpeg, so WMV and WMA do not play. Both engines share `obelisk-input`, voile-lkd's gamepad service, which voile-wine's `winebus.sys` reads.
 
 ## Building
 
@@ -176,6 +176,8 @@ Wine searches its own `lib/wine` before `WINEDLLPATH`, so `wine-dev.sh` clones t
 ## Tests
 
 - `tests/d3d11-smoke.c` presents 120 frames and prints the adapter and feature level it got. wined3d stops at 10_1; D3DMetal reports "AMD Compatibility Mode" at 11_0.
+- `tests/mf-video-smoke.c` plays a movie through Media Foundation's source reader, as games do, and prints the formats it found and what it decoded. Given the colour of the movie's first frame, it also checks the pixels.
+- `tests/mf-h264-decoder.c` decodes an H.264 byte stream through Media Foundation's H.264 decoder transform, as engines that read the movie file themselves do. Given the luma of the first frame's centre, it also checks the pixels. On macOS the decoder offers no NV12, which CrossOver's Wine leaves out there.
 - `tests/wow64-force-exec.c` is a 32-bit program that forces exec permission, as Wine's loader does for a module without NX_COMPAT, then makes a few syscalls and exits 0. A runtime that loses the syscall dispatcher page at that point dies with "stack overflow" instead.
 
 ## License

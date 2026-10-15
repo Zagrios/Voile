@@ -85,6 +85,13 @@ copy_licenses() {
     cp "$WORK/src/gnutls/gnutls/doc/COPYING.LESSER" "$licenses/gnutls.txt"
     cp "$WORK/src/gnutls/gmp/COPYING.LESSERv3" "$licenses/gmp.txt"
     cp "$WORK/obj/nettle/COPYING.LESSERv3" "$licenses/nettle.txt"
+    cp "$WORK/src-gnome/glib/COPYING" "$licenses/glib.txt"
+    cp "$WORK/src-gnome/glib/subprojects/pcre2-10.42/LICENCE" "$licenses/pcre2.txt"
+    cp "$WORK/src-gnome/glib/subprojects/proxy-libintl/COPYING" "$licenses/proxy-libintl.txt"
+    mkdir -p "$licenses/gstreamer"
+    for module in gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly; do
+        cp "$WORK/src/gstreamer/subprojects/$module/COPYING" "$licenses/gstreamer/$module.txt"
+    done
     cp "$WORK/src-proton/lsteamclient/LICENSE" "$licenses/lsteamclient.txt"
     cp "$(download wine-mono-license)" "$licenses/wine-mono.txt"
     tar -xzOf "$(download proton)" '*/LICENSE.proton' > "$licenses/steam_helper.txt"
@@ -107,6 +114,8 @@ write_manifest() {
   "voile-wine": "$(git -C "$RUNTIME/wine" rev-parse HEAD)",
   "proton": "$proton",
   "wine-mono": "$(basename "$(field wine-mono url)" -x86.tar.xz | sed 's/^wine-mono-//')",
+  "gstreamer": "$(PKG_CONFIG_LIBDIR="$WORK/deps/gstreamer/lib/pkgconfig" pkg-config --modversion gstreamer-1.0)",
+  "glib": "$(basename "$(field glib url)" .tar.xz | sed 's/^glib-//')",
   "d3dmetal": "$(cat "$WORK/d3dmetal/VERSION")",
   "linux": {
     "voile-lkd": "$(plutil -extract voile-lkd raw -o - "$WORK/linux/lkd/VERSION.json")",

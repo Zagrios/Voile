@@ -36,4 +36,8 @@ case "${OBELISK_GRAPHICS:-wined3d}" in
         exit 1
         ;;
 esac
+# As Obelisk does: only the runtime's GStreamer plugins, with their registry in
+# the prefix.
+export GST_PLUGIN_SYSTEM_PATH="$STAGE/lib/gstreamer-1.0"
+export GST_REGISTRY="$WINEPREFIX/obelisk-gstreamer-registry.bin"
 exec "$STAGE/bin/wine" "$@"

@@ -1,0 +1,31 @@
+Compare gdbus-codegen's "since" versions without distutils, which Python 3.12
+removed. glib 2.80 moved to the packaging module instead, which meson's own
+Python may lack.
+
+--- a/gio/gdbus-2.0/codegen/utils.py	2026-10-15 12:36:47
++++ b/gio/gdbus-2.0/codegen/utils.py	2026-10-15 12:36:47
+@@ -19,8 +19,8 @@
+ #
+ # Author: David Zeuthen <davidz@redhat.com>
+ 
+-import distutils.version
+ import os
++import re
+ import sys
+ 
+ 
+@@ -159,11 +159,12 @@
+ def version_cmp_key(key):
+     # If the 'since' version is 'UNRELEASED', compare higher than anything else
+     # If it is empty put a 0 in its place as this will
+-    # allow LooseVersion to work and will always compare lower.
++    # always compare lower. Numbers compare as numbers, before any word.
+     if key[0] == "UNRELEASED":
+         v = "9999"
+     elif key[0]:
+         v = str(key[0])
+     else:
+         v = "0"
+-    return (distutils.version.LooseVersion(v), key[1])
++    parts = re.findall(r"\d+|[a-zA-Z]+", v)
++    return (tuple((0, int(p), "") if p.isdigit() else (1, 0, p) for p in parts), key[1])
