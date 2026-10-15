@@ -63,7 +63,11 @@ To launch Windows games from a development build of Obelisk, install the runtime
 ./scripts/install-dev.sh             # into Obelisk's <library>/Voile/current
 ```
 
-`Voile/current` takes precedence over the release Obelisk pins. A `winedebug` file at the root of an installed runtime replaces Obelisk's default Wine debug channels, for example `err+all,+steamclient`. Obelisk writes Wine's output to `~/Library/Logs/Obelisk/<store>/`, such as `Steam/wine-<appid>.log`.
+`Voile/current` takes precedence over the release Obelisk pins. A `winedebug` file at the root of an installed runtime replaces Obelisk's default Wine debug channels, for example `err+all,+steamclient`. Obelisk writes Wine's output to `~/Library/Logs/Obelisk/<store>/`, such as `Steam/wine-<appid>.log`, after a first line that names the engine, the graphics backend, D3DMetal's ray tracing where it applies, the Voile release (`development` for `Voile/current` without a `runtime.json`) and the launch arguments the player added, for example:
+
+```
+obelisk: engine=wine-macos graphics=d3dmetal ray_tracing=on voile=v26.3.0-15 arguments=-dx11
+```
 
 ## The Linux engine
 
