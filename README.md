@@ -135,7 +135,7 @@ A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The r
 
 A `-dev` suffix, such as `v26.3.0-13-dev`, packages a local build to try before a release; `publish.sh` refuses it. `publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit. With `--draft`, the release stays a draft, and GitHub creates the tag when it is published.
 
-The Release workflow does both on GitHub, from a clean checkout of `main` on an Apple silicon runner with macOS 27. Start it from the Actions tab with **Run workflow** and the version. It refuses a version that isn't `v<CrossOver version>-<revision>` or that already has a release, runs `package.sh`, and drafts the release with `publish.sh --draft`. Check the draft, then publish it.
+The Release workflow does both on GitHub, from a clean checkout of `main` on an Apple silicon runner with macOS 27. Start it from the Actions tab with **Run workflow** and the version. It refuses a version that isn't `v<CrossOver version>-<revision>` or that already has a release, runs `package.sh`, and drafts the release with `publish.sh --draft`. Its notes name the components, then GitHub's generated notes since the previous runtime release follow. Check the draft, then publish it.
 
 Obelisk pins the release it installs in its `crates/game-runtime/voile-release.json`, with the archive's size and SHA-256.
 

@@ -39,5 +39,11 @@ notes="CrossOver $(value crossover), Zagrios/voile-wine@$(value voile-wine),"
 notes+=" ValveSoftware/Proton@$(value proton), D3DMetal from $(value d3dmetal)."
 notes+=" Linux engine: voile-lkd@$(value linux.voile-lkd), neptune@$(value linux.neptune),"
 notes+=" dxmt@$(value linux.dxmt), $(value linux.debian-root)."
+# GitHub's generated notes follow, from the previous runtime release: d3dmetal-, dxmt- and debian-root- releases
+# hold parts.
+previous="$(gh release list --exclude-drafts --limit 100 --json tagName,createdAt \
+    --jq "[.[] | select((.tagName | test(\"^v[0-9]\")) and .tagName != \"$VERSION\")] | sort_by(.createdAt) | last
+        | .tagName // empty")"
 gh release create "$VERSION" "$ARCHIVE" "$ARCHIVE.sha256" \
-    --target "$commit" --title "$VERSION" --notes "$notes" ${DRAFT:+--draft}
+    --target "$commit" --title "$VERSION" --notes "$notes" --generate-notes \
+    ${previous:+--notes-start-tag "$previous"} ${DRAFT:+--draft}
