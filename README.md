@@ -180,7 +180,7 @@ Wine searches its own `lib/wine` before `WINEDLLPATH`, so `wine-dev.sh` clones t
 
 ## License
 
-Everything in this repository is licensed under the LGPL-2.1-or-later (see `LICENSE`). D3DMetal, which the runtime downloads and ships unmodified, keeps Apple's license. Every other component keeps its own license, shipped in the release's `licenses/` folder.
+Everything in this repository is licensed under the GNU General Public License v3.0 (see `LICENSE`), except the patches in `patches/`, which keep the license of the code they patch. D3DMetal, which the runtime downloads and ships unmodified, keeps Apple's license. Every other component keeps its own license, shipped in the release's `licenses/` folder.
 
 ## Related repositories
 
