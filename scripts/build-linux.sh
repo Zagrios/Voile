@@ -29,6 +29,8 @@ TARGET=x86_64-linux-gnu.2.36
 # voile-lkd and Neptune build with the caller's tools; Wine with these only.
 CALLER_PATH="$PATH"
 export PATH="/opt/homebrew/opt/bison/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin"
+# The host programs (voile-lkd, Neptune, DXMT) run on the macOS Obelisk supports: left unset, they need the SDK's.
+export MACOSX_DEPLOYMENT_TARGET=26.0
 export ZIG_GLOBAL_CACHE_DIR="$LINUX/zig-cache" ZIG_LOCAL_CACHE_DIR="$LINUX/zig-cache-local"
 # What the guest Wine does without: no X11, no system audio or Vulkan (wsd, wineobeliskaudio and Neptune replace them).
 WINE_OPTIONS=(--enable-win64 --enable-archs=x86_64 --disable-tests --without-x --without-fontconfig
@@ -470,7 +472,7 @@ GUEST_PRELOAD=/opt/obelisk/steam-hostpid.so
 # lsteamclient and steam.exe), steam/ (Valve's Linux steamclient), guest/ (libraries a launch preloads in the guest),
 # root/ (the Debian root, with /etc/ld.so.preload).
 build_stage() {
-    local key
+    local key binary minos
     key="$(cat "$LINUX"/stamps/{wine,steam,lkd,neptune,dxmt,d3dmetal-native,steam-linux,debian-root}) $GUEST_PRELOAD"
     current stage "$key" && return
     echo "==> Linux runtime stage"
@@ -481,6 +483,13 @@ build_stage() {
     ditto "$LINUX/dxmt/dxmt-native.framework" "$STAGE/graphics/dxmt-native.framework"
     ditto "$LINUX/d3dmetal-native/lib" "$STAGE/graphics/x86_64/lib"
     ditto "$LINUX/steam" "$STAGE/steam"
+    # A host program built for a newer macOS would not start on every Mac Obelisk supports.
+    while IFS= read -r binary; do
+        file -b "$binary" | grep -q Mach-O || continue
+        minos="$(otool -l "$binary" | awk '/LC_BUILD_VERSION/ { found = 1 } found && $1 == "minos" { print $2; exit }')"
+        [[ "$(printf '%s\n' "$minos" "$MACOSX_DEPLOYMENT_TARGET" | sort -V | tail -1)" == "$MACOSX_DEPLOYMENT_TARGET" ]] ||
+            fail "${binary#"$STAGE"/} needs macOS $minos, newer than $MACOSX_DEPLOYMENT_TARGET"
+    done < <(find "$STAGE/engine" "$STAGE/graphics" -type f)
     # Valve's Windows steamclient libraries, which a prefix needs in C:\Program Files (x86)\Steam as on macOS: links
     # to the release's steam/ folder, beside this runtime's folder, so the archive holds them once.
     ln -s ../../steam/steamclient.dll ../../steam/steamclient64.dll "$STAGE/steam/"
