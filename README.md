@@ -135,13 +135,13 @@ A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The r
 
 A `-dev` suffix, such as `v26.3.0-13-dev`, packages a local build to try before a release; `publish.sh` refuses it. `publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit. With `--draft`, the release stays a draft, and GitHub creates the tag when it is published.
 
-The Release workflow does both on GitHub, from a clean checkout of `main` on an Apple silicon runner with macOS 27. Start it from the Actions tab with **Run workflow** and the version. It refuses a version that isn't `v<CrossOver version>-<revision>` or that already has a release, runs `package.sh`, and drafts the release with `publish.sh --draft`. Its notes name the components, then GitHub's generated notes since the previous runtime release follow. Check the draft, then publish it.
+The Release workflow does both on GitHub, from a clean checkout of `main` on an Apple silicon runner with macOS 27. Start it from the Actions tab with **Run workflow** and the version. It refuses a version that isn't `v<CrossOver version>-<revision>` or that already has a release, moves the submodules to their `main` and commits that to `main`, runs `package.sh`, and drafts the release with `publish.sh --draft`. Its notes name the components, then GitHub's generated notes since the previous runtime release follow. Check the draft, then publish it.
 
 Obelisk pins the release it installs in its `crates/game-runtime/voile-release.json`, with the archive's size and SHA-256.
 
 ## Sources and pinning
 
-- **Submodules**, pinned by commit, for the components that are git repositories and build from source:
+- **Submodules**, following the `main` branch named in `.gitmodules`, for the components that are git repositories and build from source. The Release workflow moves each to the latest commit of its `main` and commits that move before it builds, so a release's commit names the commits it built. Locally, `git submodule update --remote` does the same move; a checkout without it builds the commits Voile last recorded.
   - `wine` is [voile-wine](https://github.com/Zagrios/voile-wine): CrossOver's open-source Wine on its `crossover` branch, Obelisk's changes as commits on `main`. Wine builds straight from this checkout, so a local edit rebuilds it. Its changes are commits there, never patches here.
   - `voile-lkd` is [voile-lkd](https://github.com/Zagrios/voile-lkd), the Linux engine's host programs, with FEX as its own submodule.
   - `neptune` is [Neptune](https://github.com/Zagrios/neptune), the Direct3D driver of the Linux engine and its render server.

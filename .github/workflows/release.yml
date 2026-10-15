@@ -1,7 +1,9 @@
-# Builds a complete Voile release from a clean checkout and drafts it on
-# GitHub: the runtime archive, with the Linux engine in its linux folder, and
-# its SHA-256. Run it from the Actions tab with the version. Publish the draft
-# by hand once it is checked; publishing creates the tag on the packaged commit.
+# Builds a complete Voile release from a clean checkout of main and drafts it
+# on GitHub: the runtime archive, with the Linux engine in its linux folder, and
+# its SHA-256. Each submodule first moves to the latest commit of its main, and
+# that move is committed to main, so the release's commit names what it built.
+# Run it from the Actions tab with the version. Publish the draft by hand once
+# it is checked; publishing creates the tag on the packaged commit.
 name: Release
 
 on:
@@ -31,6 +33,10 @@ jobs:
     steps:
       - name: Check the version
         run: |
+          if [[ "$GITHUB_REF" != refs/heads/main ]]; then
+            echo "::error::Run the release from main: it commits the submodules' new commits there."
+            exit 1
+          fi
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]]; then
             echo "::error::$VERSION is not v<CrossOver version>-<revision>, such as v26.3.0-14."
             exit 1
@@ -42,10 +48,12 @@ jobs:
 
       - uses: actions/checkout@v5
 
-      - name: Check out the submodules
+      - name: Check out the submodules at their main
         run: |
+          # .gitmodules names each submodule's branch. Their own submodules (FEX in voile-lkd, the DirectX
+          # headers in DXMT) stay on the commits those repositories pin.
+          git submodule update --init --remote --depth 1 wine voile-lkd neptune dxmt
           # FEX's test binaries (800 MB) and DXMT's NVAPI stay out: the build doesn't use them.
-          git submodule update --init --depth 1 wine voile-lkd neptune dxmt
           git -C dxmt submodule update --init --depth 1 include/native/directx
           git -C voile-lkd submodule update --init --depth 1 fex
           for bins in fex-gcc-target-tests-bins fex-gvisor-tests-bins fex-posixtest-bins; do
@@ -53,6 +61,22 @@ jobs:
           done
           git -C voile-lkd/fex submodule update --init --recursive --depth 1
           git submodule status --recursive
+
+      - name: Commit the submodules' new commits
+        run: |
+          moved=()
+          for module in wine voile-lkd neptune dxmt; do
+            old="$(git rev-parse "HEAD:$module")" new="$(git -C "$module" rev-parse HEAD)"
+            [[ "$old" == "$new" ]] || moved+=("$module ${old:0:12}..${new:0:12}")
+          done
+          if (( ${#moved[@]} )); then
+            git config user.name Zagrios
+            git config user.email 40181755+Zagrios@users.noreply.github.com
+            git commit --quiet -m "Build $VERSION from the submodules' main" -m "$(printf '%s\n' "${moved[@]}")" \
+              wine voile-lkd neptune dxmt
+            git push origin HEAD:main
+          fi
+          git log -1 --format='%h %s'
 
       - name: Install the build tools
         run: |
