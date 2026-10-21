@@ -77,6 +77,22 @@ add_linux() {
         xargs -0 -n 64 -P "$JOBS" "$STRIP" --strip-debug
 }
 
+# A function the SDK declares for a newer macOS than the runtime supports is a weak import, NULL on older
+# macOS, so calling it crashes: Wine and glib called macOS 27's pipe2 on macOS 26. Only these libSystem
+# symbols may be weak, as their callers check them first. Apple's D3DMetal, in lib/external, is as Apple ships it.
+WEAK_LIBSYSTEM=(___ulock_wait2 __availability_version_check)
+check_weak_imports() {
+    local binary symbol
+    while IFS= read -r binary; do
+        file -b "$binary" | grep -q Mach-O || continue
+        while IFS= read -r symbol; do
+            [[ " ${WEAK_LIBSYSTEM[*]} " == *" $symbol "* ]] ||
+                fail "${binary#"$PACKAGE"/} weak-imports $symbol, which older macOS lacks"
+        done < <(xcrun dyld_info -imports "$binary" | awk '/\[weak-import\] \(from libSystem\)/ { print $2 }')
+    done < <(find "$PACKAGE/bin" "$PACKAGE/lib" "$PACKAGE/linux/engine" "$PACKAGE/linux/graphics" \
+        \( -path "$PACKAGE/lib/external" -o -name '*-windows' \) -prune -o -type f -print)
+}
+
 # The licenses of everything the archive ships. Valve's steamclient libraries,
 # Windows and Linux, come with none.
 copy_licenses() {
@@ -176,6 +192,7 @@ cp "$WORK/steam-windows/steamclient.dll" "$WORK/steam-windows/steamclient64.dll"
 strip_debug
 add_d3dmetal
 add_linux
+check_weak_imports
 copy_licenses
 write_manifest
 COPYFILE_DISABLE=1 tar --create --xz --options xz:compression-level=9,xz:threads=0 \
