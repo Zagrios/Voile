@@ -115,6 +115,7 @@ write_manifest() {
     cat > "$PACKAGE/runtime.json" <<EOF
 {
   "version": "$VERSION",
+  "contract": $(tr -d '[:space:]' < "$RUNTIME/CONTRACT"),
   "voile": "$(git -C "$RUNTIME" rev-parse HEAD)",
   "crossover": "$CROSSOVER",
   "voile-wine": "$(git -C "$RUNTIME/wine" rev-parse HEAD)",

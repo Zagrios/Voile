@@ -137,13 +137,15 @@ A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The r
 - the graphics backends: D3DMetal's DLLs in `lib/d3dmetal` and its framework in `lib/external`, laid in after stripping so they stay unmodified, with Apple's notices in `licenses/d3dmetal`, and DXMT's in `lib/dxmt`,
 - the Linux engine in `linux/`, with its licenses in `licenses/linux`,
 - the licenses of everything it ships, in `licenses/`,
-- `runtime.json`, which names its CrossOver version, its voile, voile-wine, Proton and DXMT commits, and in `linux` the Linux engine's parts.
+- `runtime.json`, which names its contract with Obelisk, its CrossOver version, its voile, voile-wine, Proton and DXMT commits, and in `linux` the Linux engine's parts.
 
 A `-dev` suffix, such as `v26.3.0-13-dev`, packages a local build to try before a release; `publish.sh` refuses it. `publish.sh` needs the packaged commit pushed. It creates the tag when it is missing and refuses one on another commit. With `--draft`, the release stays a draft, and GitHub creates the tag when it is published.
 
 The Release workflow does both on GitHub, from a clean checkout of `main` on an Apple silicon runner with macOS 27. Start it from the Actions tab with **Run workflow** and the version. It refuses a version that isn't `v<CrossOver version>-<revision>` or that already has a release, moves the submodules to their `main` and commits that to `main`, runs `package.sh`, and drafts the release with `publish.sh --draft`. Its notes name the components, then GitHub's generated notes since the previous runtime release follow. Check the draft, then publish it.
 
-Obelisk pins the release it installs in its `crates/game-runtime/voile-release.json`, with the archive's size and SHA-256.
+Publishing a release offers it to Obelisk. The Feed workflow writes its entry into `voile-feed.json` on `main`: the archive's URL, size and SHA-256, and the contract `CONTRACT` names at its commit. It then signs the file with the `VOILE_FEED_KEY` secret into `voile-feed.json.sig`. Each time a Windows game launches, Obelisk reads the feed and moves to the newest release of its own contract. Run the Feed workflow from the Actions tab with a version and a reason to withdraw a release: Obelisk then leaves it for the newest one left. Running it with an empty reason puts the release back.
+
+`CONTRACT` counts the changes to what Obelisk relies on in a runtime: its paths, the variables its Wine reads, the Linux engine's launch, the Steam bridge's files. Raise it, and Obelisk's along with it, whenever one of them changes; a fix inside the runtime keeps it. Obelisk's [docs/CONTRACT.md](https://github.com/Zagrios/Obelisk/blob/main/docs/CONTRACT.md) lists what it covers. `scripts/feed-key.sh` made the signing key; a new one needs a new Obelisk.
 
 ## Sources and pinning
 

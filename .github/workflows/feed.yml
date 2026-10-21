@@ -1,0 +1,77 @@
+# Keeps voile-feed.json, the releases Obelisk picks its runtime from, and its
+# signature. Publishing a release adds it. Run it from the Actions tab with a
+# version to write that release's entry again, or with a reason to withdraw it:
+# Obelisk then leaves it for the newest release left. An empty reason puts a
+# withdrawn release back.
+name: Feed
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version, such as v26.3.0-16
+        required: true
+        type: string
+      withdrawn:
+        description: Why players should leave this release; empty puts it back
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: feed
+  cancel-in-progress: false
+
+jobs:
+  feed:
+    # Only runtime releases, never the archives sources.json pins.
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.event.release.tag_name || inputs.version }}
+      WITHDRAWN: ${{ inputs.withdrawn }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Write the release's entry
+        run: |
+          git fetch --quiet --depth 1 origin "refs/tags/$VERSION:refs/tags/$VERSION"
+          ./scripts/feed.sh "$VERSION" "$WITHDRAWN"
+
+      - name: Sign the feed
+        env:
+          VOILE_FEED_KEY: ${{ secrets.VOILE_FEED_KEY }}
+        run: |
+          [[ -n "$VOILE_FEED_KEY" ]] || { echo "::error::The VOILE_FEED_KEY secret is missing."; exit 1; }
+          key="$RUNNER_TEMP/voile-feed.pem"
+          printf '%s\n' "$VOILE_FEED_KEY" > "$key"
+          openssl pkeyutl -sign -inkey "$key" -rawin -in voile-feed.json -out "$RUNNER_TEMP/voile-feed.sig"
+          rm -f "$key"
+          base64 -w0 "$RUNNER_TEMP/voile-feed.sig" > voile-feed.json.sig
+
+      - name: Commit the feed
+        run: |
+          git add voile-feed.json voile-feed.json.sig
+          if git diff --cached --quiet; then
+            echo "The feed already says this."
+            exit 0
+          fi
+          if [[ -n "$WITHDRAWN" ]]; then
+            message="Withdraw $VERSION from the feed"
+          else
+            message="Offer $VERSION in the feed"
+          fi
+          git config user.name Zagrios
+          git config user.email 40181755+Zagrios@users.noreply.github.com
+          git commit --quiet -m "$message"
+          git pull --quiet --rebase origin main
+          git push origin HEAD:main
+          git log -1 --format='%h %s'
