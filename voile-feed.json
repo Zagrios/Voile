@@ -2,6 +2,14 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-17",
+      "contract": 1,
+      "published": "2026-10-21",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-17/voile-v26.3.0-17.tar.xz",
+      "size": 430507340,
+      "sha256": "2b3f4781fcd2ee50bc8dfae52b857b511d5a7e9ecf2b88a4b1d8c175165cde49"
+    },
+    {
       "version": "v26.3.0-16",
       "contract": 1,
       "published": "2026-10-21",
