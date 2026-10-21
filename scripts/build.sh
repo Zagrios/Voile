@@ -69,8 +69,10 @@ LLVM_OPTIONS=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64
     -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF
     -DLLVM_INCLUDE_DOCS=OFF -DLLVM_ENABLE_BINDINGS=OFF -DLLVM_ENABLE_ZLIB=OFF -DLLVM_ENABLE_ZSTD=OFF
     -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_LIBXML2=OFF -DLLVM_ENABLE_LIBEDIT=OFF)
+# configure finds pipe2 in the SDK, but macOS 27 added it: on older macOS, ntdll
+# would call it through a NULL weak import as each process starts.
 WINE_OPTIONS=(--enable-archs=i386,x86_64 --disable-tests --without-x --with-gstreamer
-    --without-sdl --without-vulkan)
+    --without-sdl --without-vulkan ac_cv_func_pipe2=no)
 # Proton's Steam modules. Every other patches/ folder applies to the CrossOver tarball, except the Linux engine's,
 # which build-linux.sh applies, and glib's, which applies to GNOME's release.
 PROTON_COMPONENTS=(lsteamclient steam_helper)

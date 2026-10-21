@@ -1,0 +1,29 @@
+Check pipe2 with its header, so a build for an older macOS than its SDK
+does not find it: macOS 27 added pipe2, and glib called it through a NULL
+weak import on macOS 26.
+
+--- a/meson.build
++++ b/meson.build
+@@ -652,7 +652,6 @@
+   'memalign',
+   'mmap',
+   'newlocale',
+-  'pipe2',
+   'poll',
+   'prlimit',
+   'readlink',
+@@ -741,6 +740,14 @@
+   endif
+ endforeach
+ 
++# With its header, so the check sees the SDK's availability: a macOS SDK newer
++# than the deployment target declares pipe2, which macOS 27 added, as a weak
++# import, which meson's checks refuse.
++if cc.has_function('pipe2', prefix : '#include <unistd.h>')
++  glib_conf.set('HAVE_PIPE2', 1)
++  glib_conf_prefix = glib_conf_prefix + '#define HAVE_PIPE2 1\n'
++endif
++
+ # Export the information about free_sized() so we can correctly define a macro
+ # wrapper around g_free()/g_free_sized() depending on whether it’s available
+ glibconfig_conf.set('G_HAVE_FREE_SIZED', have_func_free_sized)
