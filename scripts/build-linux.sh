@@ -265,8 +265,9 @@ build_steam_client() {
 
 # The engine's host programs: fexdarwin-run (FEXCore and LKD), the window server (wsd, wsdctl), the input service
 # (obelisk-input, with SDL3 inside) and the supervisor wrapper, without their debug information, which points into
-# the build tree. And a guest library, built with this zig: steam-hostpid.so, which a launch preloads in the guest so
-# that Valve's steamclient.so gives Obelisk's Steam host the macOS pid of its process.
+# the build tree. And the guest's pieces, built with this zig: steam-hostpid.so, which a launch preloads in the guest so
+# that Valve's steamclient.so gives Obelisk's Steam host the macOS pid of its process, and xdg-open, which the root
+# gets in /usr/bin: the links a game opens through it open in the Mac's browser.
 build_lkd() {
     local key out="$LINUX/lkd" binary notice
     key="$(tree_key "$LKD_SOURCES")"
@@ -274,8 +275,9 @@ build_lkd() {
     echo "==> voile-lkd $(git -C "$LKD_SOURCES" rev-parse --short=12 HEAD)"
     PATH="$CALLER_PATH" JOBS="$JOBS" ZIG="$ZIG/zig" nice -n 10 "$LKD_SOURCES/build.sh"
     rm -rf "$out"
-    mkdir -p "$out/bin" "$out/guest" "$out/licenses"
+    mkdir -p "$out/bin" "$out/guest" "$out/root/usr/bin" "$out/licenses"
     cp "$LKD_SOURCES/guest/bin/steam-hostpid.so" "$out/guest/"
+    cp "$LKD_SOURCES/guest/bin/xdg-open" "$out/root/usr/bin/"
     cp "$LKD_SOURCES/fexdarwin/build/host/fexdarwin-run" "$LKD_SOURCES/wsd/bin/wsd" "$LKD_SOURCES/wsd/bin/wsdctl" \
         "$LKD_SOURCES/input/bin/obelisk-input" "$LKD_SOURCES/fexdarwin/scripts/run-with-timeout.sh" "$out/bin/"
     for binary in fexdarwin-run wsd wsdctl obelisk-input; do
@@ -470,7 +472,7 @@ GUEST_PRELOAD=/opt/obelisk/steam-hostpid.so
 # The runtime's layout: engine/ (host programs), graphics/ (arm64 render server, DXMT), graphics/x86_64 (x86_64
 # render server, d3dmetal-native), windows/ (Neptune's DLLs for the prefix), wine/ (voile-wine for Linux, with
 # lsteamclient and steam.exe), steam/ (Valve's Linux steamclient), guest/ (libraries a launch preloads in the guest),
-# root/ (the Debian root, with /etc/ld.so.preload).
+# root/ (the Debian root, with /etc/ld.so.preload and voile-lkd's /usr/bin/xdg-open).
 build_stage() {
     local key binary minos
     key="$(cat "$LINUX"/stamps/{wine,steam,lkd,neptune,dxmt,d3dmetal-native,steam-linux,debian-root}) $GUEST_PRELOAD"
@@ -495,6 +497,7 @@ build_stage() {
     ln -s ../../steam/steamclient.dll ../../steam/steamclient64.dll "$STAGE/steam/"
     ditto "$LINUX/neptune/windows" "$STAGE/windows"
     cp -cR "$LINUX/debian-root/root" "$STAGE/root"
+    ditto "$LINUX/lkd/root" "$STAGE/root"
     printf '%s\n' "$GUEST_PRELOAD" > "$STAGE/root/etc/ld.so.preload"
     stamp stage "$key"
 }
