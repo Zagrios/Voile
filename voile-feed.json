@@ -7,7 +7,8 @@
       "published": "2026-10-21",
       "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-17/voile-v26.3.0-17.tar.xz",
       "size": 430507340,
-      "sha256": "2b3f4781fcd2ee50bc8dfae52b857b511d5a7e9ecf2b88a4b1d8c175165cde49"
+      "sha256": "2b3f4781fcd2ee50bc8dfae52b857b511d5a7e9ecf2b88a4b1d8c175165cde49",
+      "notes": "Voile v26.3.0-17 gets Windows games starting again on macOS 26, and lets games on the Linux engine open web links in your browser! 🛠️🎉\n\n### Features\n\n- Games on the Linux engine can now open web links in your Mac's default browser, such as the Epic sign-in page Rocket League sometimes asks you to visit\n- The Linux engine now handles the system calls some protected games make directly from their Windows code, as Proton does\n\n### Fixes\n\n- Fixed every Windows game crashing as soon as it started on macOS 26 with the default engine\n- Fixed games on the Linux engine freezing for up to a second each time they reopen their sound, as Rocket League does on some audio outputs\n- Fixed a crash of the Linux engine's window server when a game recreates its display, for example when it changes resolution\n\n### Components\n\nCrossOver 26.3.0, Zagrios/voile-wine@78ddf5b875af147dc06e9c1e936d4aadd895f41d, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@a1e04bc4166fc88cd41f5f0081424282bb1bb8e9, neptune@ac599b49cccd1a761973c214d71dd2b38de4e69a, dxmt@85c51603a49b806af22ac5d8a3c040dc92f993df, debian-root-trixie-20260928.\n\n**Full Changelog**: https://github.com/Zagrios/Voile/compare/v26.3.0-16...v26.3.0-17"
     },
     {
       "version": "v26.3.0-16",
