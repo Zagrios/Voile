@@ -1,9 +1,10 @@
 #!/bin/bash
 # Writes the entry of the published release VERSION into voile-feed.json, the list of releases Obelisk picks its
-# runtime from: the archive's URL, size and SHA-256, the date it was published, and the contract its commit's
-# CONTRACT names (1 for a release older than that file). A non-empty WITHDRAWN keeps the entry with that reason, which
-# makes Obelisk leave the release; an empty one puts it back. Entries stay sorted, newest first. Needs gh, jq and git,
-# and the release's tag in this checkout.
+# runtime from: the archive's URL, size and SHA-256, the date it was published, the contract its commit's CONTRACT
+# names (1 for a release older than that file), and its notes, which Obelisk shows players before they take it; run it
+# again once they change. A non-empty WITHDRAWN keeps the entry with that reason, which makes Obelisk leave the
+# release; an empty one puts it back. Entries stay sorted, newest first. Needs gh, jq and git, and the release's tag in
+# this checkout.
 set -euo pipefail
 
 VERSION="${1:?usage: feed.sh VERSION [WITHDRAWN]}"
@@ -20,7 +21,7 @@ fail() {
 
 [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]] || fail "$VERSION is not v<CrossOver version>-<revision>."
 
-release="$(gh release view "$VERSION" -R "$REPOSITORY" --json isDraft,publishedAt,assets)"
+release="$(gh release view "$VERSION" -R "$REPOSITORY" --json isDraft,publishedAt,assets,body)"
 [[ "$(jq -r .isDraft <<<"$release")" == false ]] || fail "$VERSION is still a draft: publish it first."
 asset="$(jq -c --arg name "$ARCHIVE" '.assets[] | select(.name == $name)' <<<"$release")"
 [[ -n "$asset" ]] || fail "$VERSION has no $ARCHIVE."
@@ -37,8 +38,10 @@ entry="$(jq -n \
     --arg url "$(jq -r .url <<<"$asset")" \
     --argjson size "$(jq .size <<<"$asset")" \
     --arg sha256 "$sha256" \
+    --arg notes "$(jq -r '.body | gsub("\r"; "")' <<<"$release")" \
     --arg withdrawn "$WITHDRAWN" \
-    '{version: $version, contract: $contract, published: $published, url: $url, size: $size, sha256: $sha256}
+    '{version: $version, contract: $contract, published: $published, url: $url, size: $size, sha256: $sha256,
+      notes: $notes}
      + (if $withdrawn == "" then {} else {withdrawn: $withdrawn} end)')"
 
 [[ -f "$FEED" ]] || echo '{"format": 1, "releases": []}' > "$FEED"
@@ -46,4 +49,4 @@ updated="$(jq --arg version "$VERSION" --argjson entry "$entry" '
     .releases = ([.releases[] | select(.version != $version)] + [$entry]
         | sort_by(.version | ltrimstr("v") | [splits("[.-]")] | map(tonumber)) | reverse)' "$FEED")"
 printf '%s\n' "$updated" > "$FEED"
-jq -c --arg version "$VERSION" '.releases[] | select(.version == $version)' "$FEED"
+jq -c --arg version "$VERSION" '.releases[] | select(.version == $version) | del(.notes)' "$FEED"

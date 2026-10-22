@@ -1,6 +1,7 @@
 # Keeps voile-feed.json, the releases Obelisk picks its runtime from, and its
 # signature. Publishing a release adds it. Run it from the Actions tab with a
-# version to write that release's entry again, or with a reason to withdraw it:
+# version to write that release's entry again, such as after editing its
+# notes, or with a reason to withdraw it:
 # Obelisk then leaves it for the newest release left. An empty reason puts a
 # withdrawn release back.
 name: Feed
