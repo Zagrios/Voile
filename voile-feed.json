@@ -2,6 +2,15 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-18",
+      "contract": 1,
+      "published": "2026-10-22",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-18/voile-v26.3.0-18.tar.xz",
+      "size": 430489940,
+      "sha256": "0e3b7123656b1590f738119cd93a9ade88ea9afb003ab7ca425fa0b2eaa76f41",
+      "notes": "Voile v26.3.0-18 brings Dead by Daylight and Rocket League's Steam version to the Linux engine, and stops games freezing after a Space switch! 🛠️🎉\n\n### Features\n\n- Dead by Daylight now runs on the Linux engine, where its Easy Anti-Cheat works. It can still stutter at times\n- Rocket League's Steam version now runs on the Linux engine too, like its Epic version\n\n### Fixes\n\n- Fixed games on the Linux engine, such as Rocket League, freezing for good after you switched to another Space or covered their window and then came back (Zagrios/Obelisk#14)\n- Fixed Rocket League's Steam version crashing on the Linux engine about a second after the Easy Anti-Cheat splash screen (Zagrios/voile-lkd#1, thanks @jedgard25)\n- Fixed games on the Linux engine crashing at start when they create more than 300 threads, as Dead by Daylight does\n- Fixed the screen staying black on the Linux engine in Direct3D 11 games that change some of their render targets while keeping the others, as Dead by Daylight does\n- Fixed wrong, banded colors on the Linux engine in games that draw in 10-bit color, as Dead by Daylight does"
+    },
+    {
       "version": "v26.3.0-17",
       "contract": 1,
       "published": "2026-10-21",
