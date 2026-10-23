@@ -2,6 +2,15 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-19",
+      "contract": 1,
+      "published": "2026-10-23",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-19/voile-v26.3.0-19.tar.xz",
+      "size": 439621352,
+      "sha256": "dbd8a18274950caa4668d000c08484834ca7f8e05b41d70576a6e6db9f840cf6",
+      "notes": "Voile v26.3.0-19 lets games on the Linux engine use your microphone, and makes them behave like Mac apps when you switch away! 🛠️🎉\n\n### Features\n\n- Improved performance on the Linux engine by making memory bookkeeping much cheaper: games that check their memory use often get it in microseconds instead of milliseconds, and freeing memory costs less. Every game benefits\n- Games on the Linux engine can now use your Mac's microphone for in-game voice chat. macOS asks for access the first time a game opens it (Zagrios/voile-lkd#3, Zagrios/voile-wine#3, thanks @LaganYT)\n- Games on the Linux engine now show their own mouse cursors instead of the Mac arrow, and can move the pointer\n- Games on the Linux engine now know when you switch to another app: they pause or mute as they do on Windows, and a game that minimized itself comes back when you return to it\n- Your Mac's display no longer goes to sleep while you play with a gamepad, or while a game asks to keep it on\n\n### Fixes\n\n- Fixed a fullscreen game on the Linux engine staying in front of the app you switched to with Cmd-Tab, or of the browser page it opened\n- Fixed Caps Lock being reversed every other time in games on the Linux engine\n- Fixed the numeric keypad, F13 to F20, Japanese keyboard keys and the key left of 1 on ISO keyboards not working, or giving the wrong key, in games on the Linux engine\n- Fixed a game's popup windows on the Linux engine taking the focus away from the game, and windows the game brings forward staying behind\n- Fixed a game on the Linux engine stopping your Mac from logging out, restarting or shutting down: the game is now asked to close\n- Fixed games on the Linux engine freezing when their graphics crashed right after they read back a texture and released it, as in Fall Guys after sign-in or in busy VRChat worlds (Zagrios/neptune#1, thanks @BrandonSigil)"
+    },
+    {
       "version": "v26.3.0-18",
       "contract": 1,
       "published": "2026-10-22",
