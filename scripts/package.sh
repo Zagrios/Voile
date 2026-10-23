@@ -32,6 +32,7 @@ download() {
 CROSSOVER="$(basename "$(field crossover url)" .tar.gz)"
 CROSSOVER="${CROSSOVER#crossover-sources-}"
 [[ "$VERSION" == "v$CROSSOVER-"* ]] || fail "$VERSION does not match CrossOver $CROSSOVER in sources.json"
+command -v xz >/dev/null || fail "xz is missing: brew install xz"
 # runtime.json names commits, so the archive must hold exactly what they contain.
 for repository in "$RUNTIME" "$RUNTIME/wine" "$RUNTIME/voile-lkd" "$RUNTIME/neptune" "$RUNTIME/dxmt"; do
     [[ -z "$(git -C "$repository" status --porcelain)" ]] || fail "$repository has uncommitted changes"
@@ -94,7 +95,9 @@ check_weak_imports() {
 }
 
 # The licenses of everything the archive ships. Valve's steamclient libraries,
-# Windows and Linux, come with none.
+# Windows and Linux, come with none. Those of LLVM and of GnuTLS's and
+# GStreamer's dependencies come from their downloads: the release workflow keeps
+# what those steps install, not their build folders.
 copy_licenses() {
     local licenses="$PACKAGE/licenses"
     mkdir -p "$licenses/d3dmetal"
@@ -103,13 +106,14 @@ copy_licenses() {
     cp "$WORK/src/freetype/docs/FTL.TXT" "$licenses/freetype.txt"
     cp "$WORK/src/gnutls/gnutls/doc/COPYING.LESSER" "$licenses/gnutls.txt"
     cp "$WORK/src/gnutls/gmp/COPYING.LESSERv3" "$licenses/gmp.txt"
-    cp "$WORK/obj/nettle/COPYING.LESSERv3" "$licenses/nettle.txt"
-    cp "$WORK/src-gnome/glib/COPYING" "$licenses/glib.txt"
-    cp "$WORK/src-gnome/glib/subprojects/pcre2-10.42/LICENCE" "$licenses/pcre2.txt"
-    cp "$WORK/src-gnome/glib/subprojects/proxy-libintl/COPYING" "$licenses/proxy-libintl.txt"
+    tar -xzOf "$(download nettle)" '*/COPYING.LESSERv3' > "$licenses/nettle.txt"
+    # glib's COPYING is a link to this file.
+    tar -xJOf "$(download glib)" '*/LICENSES/LGPL-2.1-or-later.txt' > "$licenses/glib.txt"
+    tar -xjOf "$(download pcre2)" '*/LICENCE' > "$licenses/pcre2.txt"
+    tar -xzOf "$(download proxy-libintl)" '*/COPYING' > "$licenses/proxy-libintl.txt"
     cp "$RUNTIME/dxmt/LICENSE" "$licenses/dxmt.txt"
     cp "$RUNTIME/dxmt/COPYING.LIB" "$licenses/dxmt-COPYING.LIB.txt"
-    cp "$WORK/obj/llvm-src/llvm/LICENSE.TXT" "$licenses/llvm.txt"
+    tar -xJOf "$(download llvm)" '*/llvm/LICENSE.TXT' > "$licenses/llvm.txt"
     mkdir -p "$licenses/gstreamer"
     for module in gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly; do
         cp "$WORK/src/gstreamer/subprojects/$module/COPYING" "$licenses/gstreamer/$module.txt"
@@ -195,9 +199,10 @@ add_linux
 check_weak_imports
 copy_licenses
 write_manifest
-COPYFILE_DISABLE=1 tar --create --xz --options xz:compression-level=9,xz:threads=0 \
-    --no-mac-metadata --no-xattrs --uid 0 --gid 0 --numeric-owner \
-    --file "$ARCHIVE" -C "$WORK/package" "$NAME"
+# macOS's tar compresses on one core, whatever its xz:threads option says. xz
+# uses every core, for an archive about 3% larger.
+COPYFILE_DISABLE=1 tar --create --no-mac-metadata --no-xattrs --uid 0 --gid 0 --numeric-owner \
+    --file - -C "$WORK/package" "$NAME" | xz -9 -T0 > "$ARCHIVE"
 (cd "$RELEASE" && shasum -a 256 "$NAME.tar.xz" > "$NAME.tar.xz.sha256")
 echo "==> Checking the archive"
 verify

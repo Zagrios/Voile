@@ -82,7 +82,7 @@ jobs:
         run: |
           arch -x86_64 /usr/bin/true 2>/dev/null ||
             sudo softwareupdate --install-rosetta --agree-to-license
-          brew install bison meson ninja pkgconf llvm@15 zstd
+          brew install bison meson ninja pkgconf llvm@15 zstd xz
           # DXMT compiles its Metal shaders with Xcode's Metal toolchain.
           xcodebuild -downloadComponent MetalToolchain
           # Neptune's meson needs mako, PyYAML and packaging (Mesa compares versions with it, and Python 3.12 has
@@ -96,6 +96,20 @@ jobs:
           path: build/downloads
           key: voile-downloads-${{ hashFiles('sources.json') }}
           restore-keys: voile-downloads-
+
+      # What build.sh installs before Wine (FreeType, GnuTLS, GStreamer and LLVM, half an hour of the build) rarely
+      # changes between releases. Each stamp names its step's inputs: build.sh skips the step while they match,
+      # and rebuilds it from scratch otherwise.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            build/deps
+            build/stamps/freetype
+            build/stamps/gnutls
+            build/stamps/gstreamer
+            build/stamps/llvm
+          key: voile-deps-${{ hashFiles('sources.json', 'scripts/build.sh', 'patches/**') }}
+          restore-keys: voile-deps-
 
       - name: Build and package
         run: PATH="$PWD/build/pyenv/bin:$PATH" ./scripts/package.sh "$VERSION"

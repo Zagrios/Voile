@@ -127,6 +127,7 @@ The game starts behind Proton's `steam.exe`, and lsteamclient connects it to Obe
 A release is a tag `v<CrossOver version>-<revision>`, such as `v26.3.0-1`. The revision counts the releases built on one CrossOver version.
 
 ```sh
+brew install xz                      # package.sh compresses with it, on every core
 ./scripts/package.sh v26.3.0-1       # build/release/voile-v26.3.0-1.tar.xz and its .sha256
 ./scripts/publish.sh v26.3.0-1       # the GitHub release, tagged on the packaged commit
 ```
