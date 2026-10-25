@@ -2,6 +2,15 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-20",
+      "contract": 1,
+      "published": "2026-10-25",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-20/voile-v26.3.0-20.tar.xz",
+      "size": 439605708,
+      "sha256": "43f65a741b6922b0d02d67404aa3c5f5521d08b73518a1dd30f74b84405a1088",
+      "notes": "Voile v26.3.0-20 makes games on the Linux engine faster and lighter on your CPU! 🛠️🎉\n\n### Features\n\n- Improved performance in Direct3D 11 games on the Linux engine: most of a game's graphics queries and state checks are now answered right away, instead of waiting for the drawing already queued to finish. Games limited by the CPU get higher frame rates and use noticeably less CPU\n- Improved performance on both engines in games that run lots of small background jobs: Wine now needs one request fewer to set up the signal each job uses to say it is done\n- Reduced the CPU the Linux engine's graphics translation spends on every Direct3D 11 state change\n\n### Fixes\n\n- Fixed some games on the macOS engine slowing down over time and filling their log with millions of \"node memory pool exhausted\" warnings when they wait on several events at once\n- Fixed some Easy Anti-Cheat splash screens on the Linux engine staying on \"Initializing\" forever with a CPU core at full load\n- Fixed the Linux engine crashing when a game's copy protection jumps to an invalid address on purpose: the game now gets the error it expects, as on Windows"
+    },
+    {
       "version": "v26.3.0-19",
       "contract": 1,
       "published": "2026-10-23",
