@@ -2,6 +2,15 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-21",
+      "contract": 1,
+      "published": "2026-10-27",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-21/voile-v26.3.0-21.tar.xz",
+      "size": 439615292,
+      "sha256": "930001b8fd616083fbf3e9fde517b2d4d828f8ed98e4bc8a4e3ef53f1bbf0ed8",
+      "notes": "Voile v26.3.0-21 brings protected games to the Linux engine and ends loading screens that never finished! 🛠️🎉\n\n### Features\n\n- Games protected by an anti-tamper packer that keeps parts of their code encrypted until it runs now start and play on the Linux engine.\n- Improved performance in Direct3D 12 games on the Linux engine that hand work from one GPU queue to another: a frame now waits only for that work to be sent to the GPU, not for the GPU to finish it\n- WINENCPU, which limits how many processors a game sees, now also works on the Linux engine, including in the processor details games read\n\n### Fixes\n\n- Fixed games on the Linux engine sometimes staying forever on a loading screen: the game could miss the GPU finishing work it had just started tracking\n- Fixed Direct3D 12 games on the Linux engine freezing for seconds at a time when one GPU queue waits for another\n- Fixed some Direct3D 12 games on the Linux engine allocating more and more graphics memory when they only ask how large an upload is\n- Fixed Windows finding no network adapter on the Linux engine, which the online services of some games ask for\n- Fixed rare crashes on the Linux engine when a thread that set up its own signal stack exits"
+    },
+    {
       "version": "v26.3.0-20",
       "contract": 1,
       "published": "2026-10-25",
