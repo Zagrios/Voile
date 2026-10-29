@@ -2,6 +2,15 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-22",
+      "contract": 1,
+      "published": "2026-10-29",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-22/voile-v26.3.0-22.tar.xz",
+      "size": 439607440,
+      "sha256": "a0272a186d119fcdb80a491b2c05ac0ceb9d4655641248d3404ac5dd5e2b10bd",
+      "notes": "Voile v26.3.0-22 makes the Linux engine faster and gets more protected games past their own checks! 🛠️🎉\n\n### Features\n\n- Improved performance on the Linux engine. The x86 translator keeps more translated code, maps new code faster, and reuses its translations when a game writes back code it had just changed\n- Improved performance in Direct3D 11 games that time their GPU work every frame\n- Improved performance on the Linux engine in games that keep tens of thousands of graphics objects alive\n- Improved performance on the Linux engine in protected games that often change the protection of their own code or make many invalid system calls\n- Direct3D 12 games on the Linux engine preload their shaders much faster. Compiling a pipeline no longer holds back the game's other graphics calls\n- Protected games now see the same process flags and segment checks as on Windows (thanks @zzoko)\n\n### Fixes\n\n- Fixed Direct3D 12 games on the Linux engine freezing for 5 seconds every few frames while their window has the focus\n- Fixed protected games on the Linux engine freezing for up to half a minute after a while without input, then running at half their frame rate\n- Fixed protected games on the Linux engine stopping themselves after a minute or two because their own integrity check ran too slowly\n- Fixed protected games on the Linux engine crashing when they take the execute permission away from code the engine is translating\n- Fixed some Direct3D 11 games on the Linux engine reporting that they ran out of video memory when they create shared textures with several layers"
+    },
+    {
       "version": "v26.3.0-21",
       "contract": 1,
       "published": "2026-10-27",
