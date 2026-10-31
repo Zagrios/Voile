@@ -2,6 +2,15 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-24",
+      "contract": 1,
+      "published": "2026-10-31",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-24/voile-v26.3.0-24.tar.xz",
+      "size": 439583920,
+      "sha256": "6151007373b1b48dad8ef4908723d7e93ef3356ab2f903f864c053c6317f166c",
+      "notes": "Voile continues to get better, thanks to your continued support and contributions! 🎈🎉\n\n### Features\n\n- Windows games on the Linux engine can now render at a share of the screen's pixels. Borderless and windowed games, and games with no resolution setting, no longer have to render the whole Retina size: they draw fewer pixels and macOS scales the picture up (Obelisk 0.6.0 adds the setting for it)\n\n### Fixes\n\n- Fixed the pointer being offset in Windows games on the Linux engine after they switch to a lower resolution: the game's desktop now has the size of the resolution it chose, whatever its aspect ratio, and the picture is stretched to the screen\n- Fixed Windows games on the Linux engine being offered display resolutions larger than the screen\n- Fixed some protected games on the Linux engine failing to start with an anti-cheat error when they write to the same memory page as their own code"
+    },
+    {
       "version": "v26.3.0-23",
       "contract": 1,
       "published": "2026-10-31",
