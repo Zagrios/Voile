@@ -2,6 +2,15 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-23",
+      "contract": 1,
+      "published": "2026-10-31",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-23/voile-v26.3.0-23.tar.xz",
+      "size": 439589016,
+      "sha256": "c69f079130ebea8ca7e07ccc4e715fe585cceded4d1ece7c8f0e84b09daeeb19",
+      "notes": "Voile v26.3.0-23 fixes Direct3D 11 crashes and makes the Linux engine run more protected games! 🛠️🎉\n\n### Features\n\n- Protected games that run 32-bit code inside their 64-bit process now work on the Linux engine: the engine uses Linux's 32-bit code segment for that code, runs signal handlers in 64-bit mode, and translates the string instructions and interrupt returns those games use\n- Invalid instructions are now reported to the game the way Linux reports them, which is what protected games check for\n\n### Fixes\n\n- Fixed Direct3D 11 games on the Linux engine crashing their graphics process after a few minutes when several of the game's threads use the device\n- Fixed protected games on the Linux engine going wrong after a stack segment change while single-stepping, and after loading a segment register the check had rejected"
+    },
+    {
       "version": "v26.3.0-22",
       "contract": 1,
       "published": "2026-10-29",
