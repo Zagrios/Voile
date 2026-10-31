@@ -28,8 +28,13 @@ value() {
     fail "$ARCHIVE does not match its checksum"
 cd "$RUNTIME"
 commit="$(value voile)"
-gh api "repos/{owner}/{repo}/commits/$commit" --silent 2>/dev/null ||
-    fail "Push $commit before publishing it"
+# The check shows GitHub's answer and tries again: a release build that gets
+# this far has been running for over an hour.
+for attempt in 1 2 3 4 5; do
+    gh api "repos/{owner}/{repo}/commits/$commit" --silent && break
+    [[ "$attempt" -lt 5 ]] || fail "Push $commit before publishing it"
+    sleep 20
+done
 # A tag that already exists, like the one that starts the Release workflow,
 # must name the packaged commit.
 if tagged="$(gh api "repos/{owner}/{repo}/commits/$VERSION" --jq .sha 2>/dev/null)"; then
