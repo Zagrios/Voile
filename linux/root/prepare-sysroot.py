@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Extract official Debian amd64 packages locally; never run maintainer scripts.
 
-Usage: python3 prepare-sysroot.py base|wine|replay
-The captured Packages index and lock.json pin package URLs and SHA-256 hashes.
+Usage: python3 prepare-sysroot.py base|wine|replay|media
+The captured Packages index and lock.json pin package URLs and SHA-256 hashes. media adds, on top of a replayed root,
+the GStreamer plugins winegstreamer plays games' videos with, and pins the packages lock.json lacks in
+lock-media.json; replay extracts lock-media.json too once it exists.
 This is a dependency-closure extractor, not a general Debian package manager.
 """
 import concurrent.futures
@@ -21,6 +23,9 @@ CACHE = BASE / "packages"
 INDEX = BASE / "Packages-amd64.xz"
 ORIGIN = "https://deb.debian.org/debian/"
 INDEX_URL = ORIGIN + "dists/trixie/main/binary-amd64/Packages.xz"
+# GStreamer's demuxers, converters and decodebin (base, good) and gst-libav, which decodes H.264, AAC and the like with
+# FFmpeg: the elements winegstreamer builds a game's Media Foundation videos from.
+MEDIA_SEEDS = ["gstreamer1.0-plugins-base", "gstreamer1.0-plugins-good", "gstreamer1.0-libav"]
 
 
 def digest(path):
@@ -66,13 +71,14 @@ def package_index():
     return packages, providers
 
 
-def closure(seeds):
+def closure(seeds, present=frozenset()):
+    """The seeds and what they depend on, but for the packages in present, which a root already holds."""
     packages, providers = package_index()
     selected = {}
     pending = list(seeds)
     while pending:
         name = pending.pop()
-        if name in selected:
+        if name in selected or name in present:
             continue
         record = packages[name]
         selected[name] = record
@@ -89,7 +95,7 @@ def closure(seeds):
                         candidates.extend(providers.get(candidate, []))
                 if not candidates:
                     raise RuntimeError(f"Unresolved {name}: {dependency}")
-                pending.append(next((c for c in candidates if c in selected), candidates[0]))
+                pending.append(next((c for c in candidates if c in selected or c in present), candidates[0]))
     return [{"name": name, "version": record["Version"],
              "url": ORIGIN + record["Filename"], "sha256": record["SHA256"],
              "size": int(record["Size"]),
@@ -139,15 +145,34 @@ def prepare_wine_zlib():
         (BASE / 'wine-zlib-preparation.json').write_text(json.dumps(changes, indent=2) + '\n')
 
 
+def prepare_alternatives():
+    """Make the links update-alternatives would in libblas3's and liblapack3's postinst, which media pulls in for
+    libavfilter: without them, libavfilter and gst-libav do not load."""
+    folder = ROOT / "usr/lib/x86_64-linux-gnu"
+    for link, target in (("libblas.so.3", "blas/libblas.so.3"), ("liblapack.so.3", "lapack/liblapack.so.3")):
+        if (folder / target).exists() and not os.path.lexists(folder / link):
+            (folder / link).symlink_to(target)
+
+
 def main():
     mode = sys.argv[1] if len(sys.argv) == 2 else "base"
-    if mode not in {"base", "wine", "replay"}:
-        raise SystemExit("Usage: prepare-sysroot.py base|wine|replay")
+    if mode not in {"base", "wine", "replay", "media"}:
+        raise SystemExit("Usage: prepare-sysroot.py base|wine|replay|media")
     ROOT.mkdir(exist_ok=True)
     CACHE.mkdir(exist_ok=True)
     if mode == "replay":
         lock = json.loads((BASE / "lock.json").read_text())
         records = lock["packages"]
+        if (BASE / "lock-media.json").is_file():
+            records += json.loads((BASE / "lock-media.json").read_text())["packages"]
+    elif mode == "media":
+        if not (ROOT / "usr/lib/x86_64-linux-gnu").is_dir():
+            raise SystemExit("Replay lock.json first: media adds to that root")
+        present = {record["name"] for record in json.loads((BASE / "lock.json").read_text())["packages"]}
+        records = closure(MEDIA_SEEDS, present)
+        lock = {"suite": "trixie", "architecture": "amd64", "index_url": INDEX_URL,
+                "index_sha256": digest(INDEX), "seeds": MEDIA_SEEDS, "packages": records}
+        (BASE / "lock-media.json").write_text(json.dumps(lock, indent=2) + "\n")
     else:
         seeds = ["libc6", "coreutils", "dash"]
         if mode == "wine":
@@ -176,6 +201,7 @@ def main():
     for record in records:
         extract(record)
     prepare_wine_zlib()
+    prepare_alternatives()
     for name in ("tmp", "proc", "sys", "dev", "run", "home/experiment"):
         (ROOT / name).mkdir(parents=True, exist_ok=True)
     (ROOT / "etc").mkdir(exist_ok=True)
