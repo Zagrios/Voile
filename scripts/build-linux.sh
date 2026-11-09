@@ -35,7 +35,7 @@ export ZIG_GLOBAL_CACHE_DIR="$LINUX/zig-cache" ZIG_LOCAL_CACHE_DIR="$LINUX/zig-c
 # What the guest Wine does without: no X11, no system audio or Vulkan (wsd, wineobeliskaudio and Neptune replace them).
 # i386 adds the PE modules of new WoW64, which runs 32-bit programs in 64-bit processes: the unix side stays x86-64 only.
 WINE_OPTIONS=(--enable-win64 --enable-archs=i386,x86_64 --disable-tests --without-x --without-fontconfig
-    --without-pulse --without-alsa --without-cups --without-sdl --without-vulkan
+    --with-gstreamer --without-pulse --without-alsa --without-cups --without-sdl --without-vulkan
     --without-opengl --without-dbus --without-udev --without-usb --without-v4l2 --without-gphoto --without-sane
     --without-pcap --without-krb5 --without-oss --without-capi --without-netapi --without-unwind
     --without-wayland --without-inotify)
@@ -157,7 +157,7 @@ build_archives() {
 GSTREAMER_DEV_PACKAGES=(debian-gstreamer-dev debian-gst-plugins-base-dev debian-gio-dev)
 
 build_sysroot() {
-    local key package archive member library
+    local key package archive member library paths
     key="$(field debian-freetype-dev sha256)-$(field debian-gnutls-dev sha256)-$(field debian-root sha256)"
     key+="-$(field debian-x11proto-dev sha256)"
     for package in "${GSTREAMER_DEV_PACKAGES[@]}"; do
@@ -170,12 +170,13 @@ build_sysroot() {
     for package in debian-freetype-dev debian-gnutls-dev debian-x11proto-dev "${GSTREAMER_DEV_PACKAGES[@]}"; do
         archive="$(fetch "$package")"
         member="$(ar t "$archive" | grep '^data.tar')"
-        ar p "$archive" "$member" | tar -xf - -C "$SYSROOT" ./usr/include
+        paths=(./usr/include)
+        # GLib keeps glibconfig.h beside its libraries.
+        if [[ "$package" == debian-gio-dev ]]; then
+            paths+=(./usr/lib/x86_64-linux-gnu/glib-2.0/include)
+        fi
+        ar p "$archive" "$member" | tar -xf - -C "$SYSROOT" "${paths[@]}"
     done
-    # GLib keeps glibconfig.h beside its libraries.
-    archive="$(fetch debian-gio-dev)"
-    member="$(ar t "$archive" | grep '^data.tar')"
-    ar p "$archive" "$member" | tar -xf - -C "$SYSROOT" ./usr/lib/x86_64-linux-gnu/glib-2.0/include
     mkdir -p "$SYSROOT/usr/lib/x86_64-linux-gnu"
     for library in libfreetype.so.6 libgnutls.so.30 libgstreamer-1.0.so.0 libgstvideo-1.0.so.0 libgstaudio-1.0.so.0 \
         libgsttag-1.0.so.0 libgobject-2.0.so.0 libglib-2.0.so.0; do
@@ -196,12 +197,16 @@ WINE_UNIX_LDFLAGS="-Wl,-z,max-page-size=16384"
 WINE_PRELOADER=wine64-preloader
 
 build_wine() {
-    local source_key key unix="$STAGE/wine/lib/wine/x86_64-unix"
+    local source_key key unix="$STAGE/wine/lib/wine/x86_64-unix" gstreamer_cflags gstreamer_libs
     source_key="$(git -C "$WINE_SOURCES" rev-parse HEAD)-$(git -C "$WINE_SOURCES" diff HEAD | shasum -a 256 | cut -c1-16)"
     key="$source_key $(field zig sha256) $(cat "$LINUX/stamps/sysroot") ${WINE_OPTIONS[*]} $WINE_UNIX_LDFLAGS"
     key+=" $WINE_PRELOADER"
     current wine "$key" && return
     echo "==> Wine for Linux $(git -C "$WINE_SOURCES" rev-parse --short=12 HEAD)"
+    gstreamer_cflags="-I$SYSROOT/usr/include/gstreamer-1.0 -I$SYSROOT/usr/include/glib-2.0"
+    gstreamer_cflags+=" -I$SYSROOT/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+    gstreamer_libs="-L$SYSROOT/usr/lib/x86_64-linux-gnu -lgstvideo-1.0 -lgstaudio-1.0 -lgsttag-1.0 -lgstreamer-1.0"
+    gstreamer_libs+=" -lgobject-2.0 -lglib-2.0 -Wl,--allow-shlib-undefined"
     rm -rf "$OBJECTS" "$STAGE/wine"
     mkdir -p "$OBJECTS"
     (
@@ -213,8 +218,7 @@ build_wine() {
             FREETYPE_LIBS="-L$SYSROOT/usr/lib/x86_64-linux-gnu -lfreetype -Wl,--allow-shlib-undefined" \
             GNUTLS_CFLAGS="-I$SYSROOT/usr/include" \
             GNUTLS_LIBS="-L$SYSROOT/usr/lib/x86_64-linux-gnu -lgnutls -Wl,--allow-shlib-undefined" \
-            GSTREAMER_CFLAGS="-I$SYSROOT/usr/include/gstreamer-1.0 -I$SYSROOT/usr/include/glib-2.0 -I$SYSROOT/usr/lib/x86_64-linux-gnu/glib-2.0/include" \
-            GSTREAMER_LIBS="-L$SYSROOT/usr/lib/x86_64-linux-gnu -lgstvideo-1.0 -lgstaudio-1.0 -lgsttag-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -Wl,--allow-shlib-undefined"
+            GSTREAMER_CFLAGS="$gstreamer_cflags" GSTREAMER_LIBS="$gstreamer_libs"
         nice -n 10 make -j"$JOBS"
         make install-lib prefix="$STAGE/wine" bindir="$STAGE/wine/bin" libdir="$STAGE/wine/lib" \
             dlldir="$STAGE/wine/lib/wine" datadir="$STAGE/wine/share" fontdir="$STAGE/wine/share/wine/fonts" \
