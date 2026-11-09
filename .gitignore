@@ -1,2 +1,7 @@
 /build/
 .DS_Store
+# What linux/root/prepare-sysroot.py downloads and extracts.
+/linux/root/rootfs/
+/linux/root/packages/
+/linux/root/Packages-amd64.xz*
+/linux/root/wine-zlib-preparation.json

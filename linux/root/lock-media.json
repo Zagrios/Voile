@@ -6,135 +6,14 @@
   "seeds": [
     "gstreamer1.0-plugins-base",
     "gstreamer1.0-plugins-good",
-    "gstreamer1.0-libav"
+    "gstreamer1.0-plugins-ugly",
+    "gstreamer1.0-libav",
+    "libgstreamer-plugins-bad1.0-0"
+  ],
+  "excluded": [
+    "libsoup-3.0-0"
   ],
   "packages": [
-    {
-      "name": "base-files",
-      "version": "13.8+deb13u7",
-      "url": "https://deb.debian.org/debian/pool/main/b/base-files/base-files_13.8+deb13u7_amd64.deb",
-      "sha256": "fcd42bb5cb63f7bfc4326a92541247872206d60a192fdff65ca14eb83ed408b9",
-      "size": 88296,
-      "installed_kib": 500,
-      "architecture": "amd64"
-    },
-    {
-      "name": "dbus",
-      "version": "1.16.2-2",
-      "url": "https://deb.debian.org/debian/pool/main/d/dbus/dbus_1.16.2-2_amd64.deb",
-      "sha256": "f5c47639614324dac9a4c0baf5081676f698f815dd846060952b1d2e6e50f274",
-      "size": 71632,
-      "installed_kib": 154,
-      "architecture": "amd64"
-    },
-    {
-      "name": "dbus-bin",
-      "version": "1.16.2-2",
-      "url": "https://deb.debian.org/debian/pool/main/d/dbus/dbus-bin_1.16.2-2_amd64.deb",
-      "sha256": "a7c0785f89d3763bb83e2912237135a7d1c610e06f487c39b1d6408e88d46fb5",
-      "size": 80004,
-      "installed_kib": 190,
-      "architecture": "amd64"
-    },
-    {
-      "name": "dbus-daemon",
-      "version": "1.16.2-2",
-      "url": "https://deb.debian.org/debian/pool/main/d/dbus/dbus-daemon_1.16.2-2_amd64.deb",
-      "sha256": "c91558cbd019bd5ec3e9fde0084976d5f61977f4ef0a9ed1ff48fe3a129b91d4",
-      "size": 158660,
-      "installed_kib": 352,
-      "architecture": "amd64"
-    },
-    {
-      "name": "dbus-session-bus-common",
-      "version": "1.16.2-2",
-      "url": "https://deb.debian.org/debian/pool/main/d/dbus/dbus-session-bus-common_1.16.2-2_all.deb",
-      "sha256": "98bd27836c7170839ed9c84b00daad9ed7155bd3d42e3f0ec3faf497aafa5f5f",
-      "size": 52264,
-      "installed_kib": 80,
-      "architecture": "all"
-    },
-    {
-      "name": "dbus-system-bus-common",
-      "version": "1.16.2-2",
-      "url": "https://deb.debian.org/debian/pool/main/d/dbus/dbus-system-bus-common_1.16.2-2_all.deb",
-      "sha256": "262e9ec8aae4e38bfa341648f9498b29280a81458601e1c265a36a24771d120a",
-      "size": 53540,
-      "installed_kib": 91,
-      "architecture": "all"
-    },
-    {
-      "name": "dbus-user-session",
-      "version": "1.16.2-2",
-      "url": "https://deb.debian.org/debian/pool/main/d/dbus/dbus-user-session_1.16.2-2_amd64.deb",
-      "sha256": "0f9aa775a708b28b1a3ad784e9d1f0c96227521bc29e99ddbfe05ff008b5d246",
-      "size": 52128,
-      "installed_kib": 84,
-      "architecture": "amd64"
-    },
-    {
-      "name": "dconf-gsettings-backend",
-      "version": "0.40.0-5",
-      "url": "https://deb.debian.org/debian/pool/main/d/dconf/dconf-gsettings-backend_0.40.0-5_amd64.deb",
-      "sha256": "393e8deffcc78d4396e860f10cb5e7d0aab448d6e0965add62941fcd27be00fb",
-      "size": 28636,
-      "installed_kib": 89,
-      "architecture": "amd64"
-    },
-    {
-      "name": "dconf-service",
-      "version": "0.40.0-5",
-      "url": "https://deb.debian.org/debian/pool/main/d/dconf/dconf-service_0.40.0-5_amd64.deb",
-      "sha256": "4a1feeda4605be8561ec32fb4d0655fbe2313e62e457107168f528d959b530b8",
-      "size": 32364,
-      "installed_kib": 113,
-      "architecture": "amd64"
-    },
-    {
-      "name": "gawk",
-      "version": "1:5.2.1-2+b1",
-      "url": "https://deb.debian.org/debian/pool/main/g/gawk/gawk_5.2.1-2+b1_amd64.deb",
-      "sha256": "0e3b376e74cadfa5049bc8248c563efe89fd45e31466f8891c094c65c0879f5c",
-      "size": 673696,
-      "installed_kib": 2911,
-      "architecture": "amd64"
-    },
-    {
-      "name": "glib-networking",
-      "version": "2.80.1-1",
-      "url": "https://deb.debian.org/debian/pool/main/g/glib-networking/glib-networking_2.80.1-1_amd64.deb",
-      "sha256": "183829044aa67f7e8c41a407dcee71d446da0ed3c87113689603a27007099137",
-      "size": 68968,
-      "installed_kib": 205,
-      "architecture": "amd64"
-    },
-    {
-      "name": "glib-networking-common",
-      "version": "2.80.1-1",
-      "url": "https://deb.debian.org/debian/pool/main/g/glib-networking/glib-networking-common_2.80.1-1_all.deb",
-      "sha256": "aa697ddbd07ba9e16391bd81f73661b2583859c8671d1ce92f28e6a870d37059",
-      "size": 86004,
-      "installed_kib": 678,
-      "architecture": "all"
-    },
-    {
-      "name": "glib-networking-services",
-      "version": "2.80.1-1",
-      "url": "https://deb.debian.org/debian/pool/main/g/glib-networking/glib-networking-services_2.80.1-1_amd64.deb",
-      "sha256": "545f6d24809a79f3b527ec37c30dee0b2c3b18c1466e7983d8e7b0a2cc3a4431",
-      "size": 12332,
-      "installed_kib": 41,
-      "architecture": "amd64"
-    },
-    {
-      "name": "gsettings-desktop-schemas",
-      "version": "48.0-1",
-      "url": "https://deb.debian.org/debian/pool/main/g/gsettings-desktop-schemas/gsettings-desktop-schemas_48.0-1_all.deb",
-      "sha256": "151133be02bff0bff4c860260a3418378821fad8c5d11133f588d4de760797a5",
-      "size": 699668,
-      "installed_kib": 5689,
-      "architecture": "all"
-    },
     {
       "name": "gstreamer1.0-libav",
       "version": "1.26.2-1+deb13u1",
@@ -143,6 +22,19 @@
       "size": 110244,
       "installed_kib": 293,
       "architecture": "amd64"
+    },
+    {
+      "name": "gstreamer1.0-plugins-bad",
+      "version": "1.26.2-3+deb13u3",
+      "url": "https://deb.debian.org/debian/pool/main/g/gst-plugins-bad1.0/gstreamer1.0-plugins-bad_1.26.2-3+deb13u3_amd64.deb",
+      "sha256": "43016e30d84a1527931e0a34441587c40e0a415e7c897bf4e8668e1149b0c4a1",
+      "size": 3339660,
+      "installed_kib": 11980,
+      "architecture": "amd64",
+      "files": [
+        "usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstvideoparsersbad.so",
+        "usr/share/doc/gstreamer1.0-plugins-bad/copyright"
+      ]
     },
     {
       "name": "gstreamer1.0-plugins-base",
@@ -163,13 +55,22 @@
       "architecture": "amd64"
     },
     {
-      "name": "init-system-helpers",
-      "version": "1.69~deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/i/init-system-helpers/init-system-helpers_1.69~deb13u1_all.deb",
-      "sha256": "addf78073e1cbc5a5508937e11d2571055e29835e00ee8fab52a66775649378f",
-      "size": 39360,
-      "installed_kib": 133,
-      "architecture": "all"
+      "name": "gstreamer1.0-plugins-ugly",
+      "version": "1.26.3-4+deb13u1",
+      "url": "https://deb.debian.org/debian/pool/main/g/gst-plugins-ugly1.0/gstreamer1.0-plugins-ugly_1.26.3-4+deb13u1_amd64.deb",
+      "sha256": "75f0af6c684e37fa145a81b2ffc864d59b4f537aba6e2ebb8d18377567eccd93",
+      "size": 188536,
+      "installed_kib": 762,
+      "architecture": "amd64"
+    },
+    {
+      "name": "liba52-0.7.4",
+      "version": "0.7.4-20+b3",
+      "url": "https://deb.debian.org/debian/pool/main/a/a52dec/liba52-0.7.4_0.7.4-20+b3_amd64.deb",
+      "sha256": "c3da5eb121edc16b0a1eb3614f0e5cdee0d00542b22828700212c9c3b7363770",
+      "size": 34212,
+      "installed_kib": 90,
+      "architecture": "amd64"
     },
     {
       "name": "libaa1",
@@ -181,39 +82,12 @@
       "architecture": "amd64"
     },
     {
-      "name": "libapparmor1",
-      "version": "4.1.0-1",
-      "url": "https://deb.debian.org/debian/pool/main/a/apparmor/libapparmor1_4.1.0-1_amd64.deb",
-      "sha256": "4158976c77038b93021967f425b4cc505df18c4f5e3f444732399e7ed4af4419",
-      "size": 43688,
-      "installed_kib": 115,
-      "architecture": "amd64"
-    },
-    {
       "name": "libass9",
       "version": "1:0.17.3-1+deb13u1",
       "url": "https://deb.debian.org/debian/pool/main/liba/libass/libass9_0.17.3-1+deb13u1_amd64.deb",
       "sha256": "000faddfaa19c7c1631f2d71a9cd1982cd3a88611967debe631440a1c64617b4",
       "size": 114152,
       "installed_kib": 286,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libaudit-common",
-      "version": "1:4.0.2-2+deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/a/audit/libaudit-common_4.0.2-2+deb13u1_all.deb",
-      "sha256": "b9d32e5ff04fd747aacb7d6b3ebbbbf734ddefb2f1695f0b1b2a4b5e51b1052e",
-      "size": 12812,
-      "installed_kib": 25,
-      "architecture": "all"
-    },
-    {
-      "name": "libaudit1",
-      "version": "1:4.0.2-2+deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/a/audit/libaudit1_4.0.2-2+deb13u1_amd64.deb",
-      "sha256": "3d1dd3f031a56f01b747e2acc0e14575212580e6fa63d800c44cb0a31f1edfd7",
-      "size": 57680,
-      "installed_kib": 198,
       "architecture": "amd64"
     },
     {
@@ -262,12 +136,12 @@
       "architecture": "amd64"
     },
     {
-      "name": "libcap-ng0",
-      "version": "0.8.5-4+b1",
-      "url": "https://deb.debian.org/debian/pool/main/libc/libcap-ng/libcap-ng0_0.8.5-4+b1_amd64.deb",
-      "sha256": "20a9e4b0619a3eb2566338223bed135dde5a601eaa2f8fdd5f20b94506addcac",
-      "size": 17584,
-      "installed_kib": 66,
+      "name": "libcdio19t64",
+      "version": "2.2.0-4.1~deb13u1",
+      "url": "https://deb.debian.org/debian/pool/main/libc/libcdio/libcdio19t64_2.2.0-4.1~deb13u1_amd64.deb",
+      "sha256": "bddfa8b7eca542379962152216d3414e999bca809a4a25543a193b4d1acc4ba1",
+      "size": 61640,
+      "installed_kib": 191,
       "architecture": "amd64"
     },
     {
@@ -277,42 +151,6 @@
       "sha256": "528e4c50933f0d1ce5d8e101c080ff5b4fd645793a58d863ccd5f585093d838e",
       "size": 44796,
       "installed_kib": 130,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libcrypt1",
-      "version": "1:4.4.38-1",
-      "url": "https://deb.debian.org/debian/pool/main/libx/libxcrypt/libcrypt1_4.4.38-1_amd64.deb",
-      "sha256": "0ebc144d662e3197982d1bf3a7b8b35ca845e54c68811de0328b1f0d7c67585c",
-      "size": 90072,
-      "installed_kib": 234,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libcurl3t64-gnutls",
-      "version": "8.14.1-2+deb13u5",
-      "url": "https://deb.debian.org/debian/pool/main/c/curl/libcurl3t64-gnutls_8.14.1-2+deb13u5_amd64.deb",
-      "sha256": "19da93544615a4c9a3d7df473f5bf8ebca99442454622e9b0460168dadf7b8ae",
-      "size": 384460,
-      "installed_kib": 997,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libdconf1",
-      "version": "0.40.0-5",
-      "url": "https://deb.debian.org/debian/pool/main/d/dconf/libdconf1_0.40.0-5_amd64.deb",
-      "sha256": "6e7f670e1cf493ae8f60dea52f5a4aef56605d5b06d921113d7c2a2800ff5af1",
-      "size": 41796,
-      "installed_kib": 112,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libduktape207",
-      "version": "2.7.0-2+b2",
-      "url": "https://deb.debian.org/debian/pool/main/d/duktape/libduktape207_2.7.0-2+b2_amd64.deb",
-      "sha256": "2d92606f49cf79e23fb4ea67ab7702d52e016a671d32edc51482c4f1e3bade7c",
-      "size": 134688,
-      "installed_kib": 319,
       "architecture": "amd64"
     },
     {
@@ -361,12 +199,57 @@
       "architecture": "amd64"
     },
     {
+      "name": "libgssdp-1.6-0",
+      "version": "1.6.4-1~deb13u1",
+      "url": "https://deb.debian.org/debian/pool/main/g/gssdp/libgssdp-1.6-0_1.6.4-1~deb13u1_amd64.deb",
+      "sha256": "ea9f0d33f5a569881b761d6f345ed22a4eafc7b0e6cfd1567d0e586e20793a87",
+      "size": 39212,
+      "installed_kib": 113,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libgstreamer-gl1.0-0",
+      "version": "1.26.2-1+deb13u1",
+      "url": "https://deb.debian.org/debian/pool/main/g/gst-plugins-base1.0/libgstreamer-gl1.0-0_1.26.2-1+deb13u1_amd64.deb",
+      "sha256": "efacc61acbd44a6a067612e4592b9fe81efdc5011ed4c6cf7afd8ed83c5f834a",
+      "size": 269984,
+      "installed_kib": 761,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libgstreamer-plugins-bad1.0-0",
+      "version": "1.26.2-3+deb13u3",
+      "url": "https://deb.debian.org/debian/pool/main/g/gst-plugins-bad1.0/libgstreamer-plugins-bad1.0-0_1.26.2-3+deb13u3_amd64.deb",
+      "sha256": "0467873a5ad6a12dde998b33eae15487fbb8c9c56e12540b4bd536d7a2f51133",
+      "size": 1043568,
+      "installed_kib": 3272,
+      "architecture": "amd64"
+    },
+    {
       "name": "libgudev-1.0-0",
       "version": "238-6",
       "url": "https://deb.debian.org/debian/pool/main/libg/libgudev/libgudev-1.0-0_238-6_amd64.deb",
       "sha256": "890a55ea26f52062f377389e6326abeadb72a14741c95ab6a1c5a19c77c3c3d0",
       "size": 14504,
       "installed_kib": 64,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libgupnp-1.6-0",
+      "version": "1.6.8-2",
+      "url": "https://deb.debian.org/debian/pool/main/g/gupnp/libgupnp-1.6-0_1.6.8-2_amd64.deb",
+      "sha256": "8bac186960fe59d8bcdf8d65ffe6879fa064ed033f0749bc53f74462a13c2ce2",
+      "size": 89580,
+      "installed_kib": 279,
+      "architecture": "amd64"
+    },
+    {
+      "name": "libgupnp-igd-1.6-0",
+      "version": "1.6.0-4+b1",
+      "url": "https://deb.debian.org/debian/pool/main/g/gupnp-igd/libgupnp-igd-1.6-0_1.6.0-4+b1_amd64.deb",
+      "sha256": "9026c2d66c5b0a308fe3246057f4eb175e80f7002e5a9828f307fc232aa096ca",
+      "size": 15804,
+      "installed_kib": 57,
       "architecture": "amd64"
     },
     {
@@ -397,12 +280,12 @@
       "architecture": "amd64"
     },
     {
-      "name": "libmpfr6",
-      "version": "4.2.2-1",
-      "url": "https://deb.debian.org/debian/pool/main/m/mpfr4/libmpfr6_4.2.2-1_amd64.deb",
-      "sha256": "75dddce11dabc7fc543712c33dc27b7f2ee66a111763eb5eac654d010b42cd92",
-      "size": 729320,
-      "installed_kib": 1225,
+      "name": "libmpeg2-4",
+      "version": "0.5.1-9+b3",
+      "url": "https://deb.debian.org/debian/pool/main/m/mpeg2dec/libmpeg2-4_0.5.1-9+b3_amd64.deb",
+      "sha256": "37582c8e24a47012531c880074a75d245a1056b4ded9d9cac80316c8ba640601",
+      "size": 53100,
+      "installed_kib": 172,
       "architecture": "amd64"
     },
     {
@@ -433,21 +316,12 @@
       "architecture": "amd64"
     },
     {
-      "name": "libngtcp2-16",
-      "version": "1.11.0-1+deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/n/ngtcp2/libngtcp2-16_1.11.0-1+deb13u1_amd64.deb",
-      "sha256": "627eec81ebbd48c4e6091f5cd9dc5070b792b7075000eed60ab08c7daa961caf",
-      "size": 131904,
-      "installed_kib": 335,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libngtcp2-crypto-gnutls8",
-      "version": "1.11.0-1+deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/n/ngtcp2/libngtcp2-crypto-gnutls8_1.11.0-1+deb13u1_amd64.deb",
-      "sha256": "2a7f109c0c4db6a800e4661c5e5e34e1f1f83c8162482276183d1ada9da7c96c",
-      "size": 29524,
-      "installed_kib": 80,
+      "name": "libnice10",
+      "version": "0.1.22-1",
+      "url": "https://deb.debian.org/debian/pool/main/libn/libnice/libnice10_0.1.22-1_amd64.deb",
+      "sha256": "5213537dc29a098835abf4b89cd4435716560c5caa1643eedd41565c2e227708",
+      "size": 154060,
+      "installed_kib": 407,
       "architecture": "amd64"
     },
     {
@@ -466,51 +340,6 @@
       "sha256": "60a8c7d19fb58e9a727d9dd03f988d3b5ecb3adfccc7c2a73c055283fda57f08",
       "size": 53632,
       "installed_kib": 112,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libpam-modules",
-      "version": "1.7.0-5",
-      "url": "https://deb.debian.org/debian/pool/main/p/pam/libpam-modules_1.7.0-5_amd64.deb",
-      "sha256": "9679ade117f8775ac0471f48a92652ab8e8dcda4e2ff06de75158cded9cfd83c",
-      "size": 178696,
-      "installed_kib": 923,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libpam-modules-bin",
-      "version": "1.7.0-5",
-      "url": "https://deb.debian.org/debian/pool/main/p/pam/libpam-modules-bin_1.7.0-5_amd64.deb",
-      "sha256": "cc72066d008444317738e8e931d6131b301466b4e2dd5ef5baa75fb1a45d61a7",
-      "size": 49116,
-      "installed_kib": 206,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libpam-runtime",
-      "version": "1.7.0-5",
-      "url": "https://deb.debian.org/debian/pool/main/p/pam/libpam-runtime_1.7.0-5_all.deb",
-      "sha256": "b02792c9ed6174db695a653b95ef3629fdac3a73ba1eff1754ab161b5711bfbf",
-      "size": 248720,
-      "installed_kib": 1028,
-      "architecture": "all"
-    },
-    {
-      "name": "libpam-systemd",
-      "version": "257.13-1~deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/s/systemd/libpam-systemd_257.13-1~deb13u1_amd64.deb",
-      "sha256": "fcf4ee7d09e14ac9e52d8a9adb8f609ba06cc6a3ecbccc205e2c9a1ba1c39d16",
-      "size": 297256,
-      "installed_kib": 700,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libpam0g",
-      "version": "1.7.0-5",
-      "url": "https://deb.debian.org/debian/pool/main/p/pam/libpam0g_1.7.0-5_amd64.deb",
-      "sha256": "4f5bde27d8df2de6ea8990319b42d9974f56a3ba9907ce7296fd0f8964fc9fb1",
-      "size": 69880,
-      "installed_kib": 194,
       "architecture": "amd64"
     },
     {
@@ -541,39 +370,12 @@
       "architecture": "amd64"
     },
     {
-      "name": "libproc2-0",
-      "version": "2:4.0.4-9",
-      "url": "https://deb.debian.org/debian/pool/main/p/procps/libproc2-0_4.0.4-9_amd64.deb",
-      "sha256": "c9d61caab1b2ddfc3f17edb95be31b9809fcb2daf27d853dff615bc4ebd08b4b",
-      "size": 65596,
-      "installed_kib": 237,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libproxy1v5",
-      "version": "0.5.9-1",
-      "url": "https://deb.debian.org/debian/pool/main/libp/libproxy/libproxy1v5_0.5.9-1_amd64.deb",
-      "sha256": "794a8526989464cb17f1dec9dab921f0e5afb82bcc665e938fac925be47698eb",
-      "size": 26376,
-      "installed_kib": 100,
-      "architecture": "amd64"
-    },
-    {
       "name": "libraw1394-11",
       "version": "2.1.2-2+b2",
       "url": "https://deb.debian.org/debian/pool/main/libr/libraw1394/libraw1394-11_2.1.2-2+b2_amd64.deb",
       "sha256": "f6f4f76b427f2caa2ed0905e64f13c2a8902fba04c08060e806b32bc35d6daf8",
       "size": 38788,
       "installed_kib": 98,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libreadline8t64",
-      "version": "8.2-6",
-      "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_amd64.deb",
-      "sha256": "eeadf2b5e755c9f183883feea2d9b5b28560284275d5f54d3e55d0923b1d0967",
-      "size": 168832,
-      "installed_kib": 485,
       "architecture": "amd64"
     },
     {
@@ -595,15 +397,6 @@
       "architecture": "amd64"
     },
     {
-      "name": "libseccomp2",
-      "version": "2.6.0-2",
-      "url": "https://deb.debian.org/debian/pool/main/libs/libseccomp/libseccomp2_2.6.0-2_amd64.deb",
-      "sha256": "89d5138e05fb6a86b9afd8b54dc0fb4b14f4c27c05e6c5f767c2132bdf808531",
-      "size": 51712,
-      "installed_kib": 201,
-      "architecture": "amd64"
-    },
-    {
       "name": "libserd-0-0",
       "version": "0.32.4-1",
       "url": "https://deb.debian.org/debian/pool/main/s/serd/libserd-0-0_0.32.4-1_amd64.deb",
@@ -622,12 +415,12 @@
       "architecture": "amd64"
     },
     {
-      "name": "libsigsegv2",
-      "version": "2.14-1+b2",
-      "url": "https://deb.debian.org/debian/pool/main/libs/libsigsegv/libsigsegv2_2.14-1+b2_amd64.deb",
-      "sha256": "bac603b965f303ea88dc39cd723b3d88cd86e3be9c948783f0d5e0d00e971302",
-      "size": 34368,
-      "installed_kib": 64,
+      "name": "libsidplay1v5",
+      "version": "1.36.60-1+b2",
+      "url": "https://deb.debian.org/debian/pool/main/libs/libsidplay/libsidplay1v5_1.36.60-1+b2_amd64.deb",
+      "sha256": "2b8c3dad12eb0e11e9478352b40af8ee7db1afd648eefadc073d1b4a639fa175",
+      "size": 63328,
+      "installed_kib": 250,
       "architecture": "amd64"
     },
     {
@@ -640,15 +433,6 @@
       "architecture": "amd64"
     },
     {
-      "name": "libsmartcols1",
-      "version": "2.41.5-0+deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/u/util-linux/libsmartcols1_2.41.5-0+deb13u1_amd64.deb",
-      "sha256": "d96bac9c8805685f2734885098a214b82950da6ebb182c27a6b7a124a0323392",
-      "size": 143216,
-      "installed_kib": 377,
-      "architecture": "amd64"
-    },
-    {
       "name": "libsord-0-0",
       "version": "0.16.18-1",
       "url": "https://deb.debian.org/debian/pool/main/s/sord/libsord-0-0_0.16.18-1_amd64.deb",
@@ -658,39 +442,12 @@
       "architecture": "amd64"
     },
     {
-      "name": "libsoup-3.0-0",
-      "version": "3.6.5-3",
-      "url": "https://deb.debian.org/debian/pool/main/libs/libsoup3/libsoup-3.0-0_3.6.5-3_amd64.deb",
-      "sha256": "7031c74a7a355db57d7eb9d48f1e81c7ccbb41da35db7db501e08b3fe3c2c88a",
-      "size": 280004,
-      "installed_kib": 732,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libsoup-3.0-common",
-      "version": "3.6.5-3",
-      "url": "https://deb.debian.org/debian/pool/main/libs/libsoup3/libsoup-3.0-common_3.6.5-3_all.deb",
-      "sha256": "a5a1e8e37214cc4277fc56d6dffe68ff3447356202dfc0e611cea5fe457835d1",
-      "size": 65552,
-      "installed_kib": 480,
-      "architecture": "all"
-    },
-    {
       "name": "libsphinxbase3t64",
       "version": "0.8+5prealpha+1-21+b1",
       "url": "https://deb.debian.org/debian/pool/main/s/sphinxbase/libsphinxbase3t64_0.8+5prealpha+1-21+b1_amd64.deb",
       "sha256": "97edf4f50ed24364795e53abecd6e100d1f24278968b2eb01a688c78255eb80b",
       "size": 121416,
       "installed_kib": 334,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libsqlite3-0",
-      "version": "3.46.1-7+deb13u2",
-      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/libsqlite3-0_3.46.1-7+deb13u2_amd64.deb",
-      "sha256": "0a459adaffd901109f7811ab65f58e7a957b4907d05539cf3d1184efdcde0468",
-      "size": 914584,
-      "installed_kib": 1834,
       "architecture": "amd64"
     },
     {
@@ -709,15 +466,6 @@
       "sha256": "cf43cf4fe02a02cd36b25a86a2fcdeeaca9cc22bb1c81239302514db701d4e6d",
       "size": 241564,
       "installed_kib": 781,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libsystemd-shared",
-      "version": "257.13-1~deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/s/systemd/libsystemd-shared_257.13-1~deb13u1_amd64.deb",
-      "sha256": "2d349824e57f88507e2a33360610d8afc143a4ad5e80ee4bf8f37b826d6f37f9",
-      "size": 2154616,
-      "installed_kib": 6825,
       "architecture": "amd64"
     },
     {
@@ -793,21 +541,21 @@
       "architecture": "amd64"
     },
     {
+      "name": "libwayland-cursor0",
+      "version": "1.23.1-3",
+      "url": "https://deb.debian.org/debian/pool/main/w/wayland/libwayland-cursor0_1.23.1-3_amd64.deb",
+      "sha256": "26fccae2b1228744de0cad6c688550b8d13cd4e8d4ccf0cfdae015634ece673f",
+      "size": 11880,
+      "installed_kib": 51,
+      "architecture": "amd64"
+    },
+    {
       "name": "libxdamage1",
       "version": "1:1.1.6-1+b2",
       "url": "https://deb.debian.org/debian/pool/main/libx/libxdamage/libxdamage1_1.1.6-1+b2_amd64.deb",
       "sha256": "e51e43f23f3befbc1f9408271f4df6773d37caece9ce7e1f38abade382f7fbf7",
       "size": 15460,
       "installed_kib": 39,
-      "architecture": "amd64"
-    },
-    {
-      "name": "libxtst6",
-      "version": "2:1.2.5-1",
-      "url": "https://deb.debian.org/debian/pool/main/libx/libxtst/libxtst6_1.2.5-1_amd64.deb",
-      "sha256": "4f254f80b8984203474745d6428e8c2de2148f19b37aa01a601dbe9ac03196eb",
-      "size": 25756,
-      "installed_kib": 59,
       "architecture": "amd64"
     },
     {
@@ -827,78 +575,6 @@
       "size": 23088,
       "installed_kib": 75,
       "architecture": "amd64"
-    },
-    {
-      "name": "lsb-base",
-      "version": "11.6",
-      "url": "https://deb.debian.org/debian/pool/main/l/lsb/lsb-base_11.6_all.deb",
-      "sha256": "f8bedd167280e76636df3a1bc023cd2906d458916c1af4c1d7912c5b971fc642",
-      "size": 4584,
-      "installed_kib": 12,
-      "architecture": "all"
-    },
-    {
-      "name": "mount",
-      "version": "2.41.5-0+deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/u/util-linux/mount_2.41.5-0+deb13u1_amd64.deb",
-      "sha256": "eb70a615114ac40123768beb20e302554d5cb7edb33290be7e418ebe1075c878",
-      "size": 163208,
-      "installed_kib": 497,
-      "architecture": "amd64"
-    },
-    {
-      "name": "procps",
-      "version": "2:4.0.4-9",
-      "url": "https://deb.debian.org/debian/pool/main/p/procps/procps_4.0.4-9_amd64.deb",
-      "sha256": "4db90bb6776772fc52585d6b1fbfc52ec2a85480e1b4363b743fbb2ffa2a5375",
-      "size": 882088,
-      "installed_kib": 2395,
-      "architecture": "amd64"
-    },
-    {
-      "name": "readline-common",
-      "version": "8.2-6",
-      "url": "https://deb.debian.org/debian/pool/main/r/readline/readline-common_8.2-6_all.deb",
-      "sha256": "f77e8aa0bf0de618f11cb0b21658a4ed60f177d63b3cf26d7fc3706b6d0eaaa9",
-      "size": 69360,
-      "installed_kib": 89,
-      "architecture": "all"
-    },
-    {
-      "name": "systemd",
-      "version": "257.13-1~deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/s/systemd/systemd_257.13-1~deb13u1_amd64.deb",
-      "sha256": "ee81302a1d5b7434762b6e784a572854d4b6cf6235e33e2d104ad4e1cae71ab4",
-      "size": 3093632,
-      "installed_kib": 9944,
-      "architecture": "amd64"
-    },
-    {
-      "name": "systemd-sysv",
-      "version": "257.13-1~deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/s/systemd/systemd-sysv_257.13-1~deb13u1_amd64.deb",
-      "sha256": "3bed48042b6e40f8a3c439e79b4a4ed6a12102eb3ab66123dc43aa18f0416729",
-      "size": 64876,
-      "installed_kib": 97,
-      "architecture": "amd64"
-    },
-    {
-      "name": "sysvinit-utils",
-      "version": "3.14-4",
-      "url": "https://deb.debian.org/debian/pool/main/s/sysvinit/sysvinit-utils_3.14-4_amd64.deb",
-      "sha256": "c7e957360dff89675b491e501b00047cf750695178cabab167c92fc260d358ec",
-      "size": 34060,
-      "installed_kib": 104,
-      "architecture": "amd64"
-    },
-    {
-      "name": "x11-common",
-      "version": "1:7.7+24+deb13u1",
-      "url": "https://deb.debian.org/debian/pool/main/x/xorg/x11-common_7.7+24+deb13u1_all.deb",
-      "sha256": "57a981938506b26dc552f19cafeaa8c04e9b59dc7508509151f8507a9d4e5f24",
-      "size": 216864,
-      "installed_kib": 275,
-      "architecture": "all"
     }
   ]
 }
