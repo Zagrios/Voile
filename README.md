@@ -26,8 +26,8 @@ Voile has two engines, and one release carries both.
 | | macOS engine | Linux engine |
 |---|---|---|
 | **Runs** | Every Windows game by default | Games whose anti-cheat supports Linux, such as Easy Anti-Cheat in Rocket League and ELDEN RING |
-| **Wine** | [voile-wine](https://github.com/Zagrios/voile-wine) built for macOS x86_64, under Rosetta | voile-wine built for Linux x86-64, run by [voile-lkd](https://github.com/Zagrios/voile-lkd) in native arm64 processes, with no virtual machine |
-| **Direct3D** | Apple's D3DMetal (11, 12) for 64-bit games, or DXMT (10, 11), which also renders 32-bit games | [Neptune](https://github.com/Zagrios/neptune), rendering with DXMT (11) or D3DMetal (11, 12) |
+| **Wine** | [voile-wine](https://github.com/Zagrios/voile-wine) built for macOS x86_64, under Rosetta | voile-wine built for Linux x86-64, run by [voile-lkd](https://github.com/Zagrios/voile-lkd) in native arm64 processes, with no virtual machine; its i386 PE modules run 32-bit programs through new WoW64, on the same x86-64 unix side |
+| **Direct3D** | Apple's D3DMetal (11, 12) for 64-bit games, or DXMT (10, 11), which also renders 32-bit games | [Neptune](https://github.com/Zagrios/neptune), rendering with DXMT (11) or D3DMetal (11, 12), for 64-bit games only: its DLLs are 64-bit, so 32-bit programs have no Direct3D yet |
 | **Steam** | Proton's `lsteamclient` and `steam.exe`, with Valve's `steamclient` libraries | The same, with Valve's Linux `steamclient.so` |
 | **Built by** | `scripts/build.sh` | `scripts/build-linux.sh` |
 
@@ -86,13 +86,13 @@ voile-lkd, Neptune and DXMT build from their submodules like Wine, in their own 
 
 | Folder | Contents |
 |---|---|
-| `wine/` | voile-wine (the `wine` submodule) cross-built for Linux by `build-linux.sh`, with zig and llvm-mingw. Its Linux-only drivers talk to wsd: `wineobelisk.drv` (display, input), `wineobeliskaudio.drv` (audio), `nptunix` (Direct3D frames). Proton's `lsteamclient` (`lsteamclient.dll` and `lsteamclient.so`) and `steam.exe` are built into it like the macOS runtime's. Its `winegstreamer`, built against the root's GStreamer with the headers of Debian's `-dev` packages, plays the videos games play through Media Foundation, with the plugins of `lock-media.json`. |
+| `wine/` | voile-wine (the `wine` submodule) cross-built for Linux by `build-linux.sh`, with zig and llvm-mingw. Its PE modules are built for x86-64 and i386: new WoW64 runs 32-bit programs in 64-bit processes with the i386 ones, and its unix side, in `lib/wine/x86_64-unix`, is x86-64 only. Its Linux-only drivers talk to wsd: `wineobelisk.drv` (display, input), `wineobeliskaudio.drv` (audio), `nptunix` (Direct3D frames). Proton's `lsteamclient` (`lsteamclient.dll` and `lsteamclient.so`) and `steam.exe` are built into it like the macOS runtime's. Its `winegstreamer`, built against the root's GStreamer with the headers of Debian's `-dev` packages, plays the videos games play through Media Foundation, with the plugins of `lock-media.json`. |
 | `engine/` | `fexdarwin-run`, `wsd`, `wsdctl`, `obelisk-input` and `run-with-timeout.sh` from the `voile-lkd` submodule, built by `build-linux.sh`. |
 | `graphics/` | Neptune's render server (`virgl_test_server`, `virgl_render_server`) for arm64, built from the `neptune` submodule, and DXMT's `dxmt-native.framework`, built from the `dxmt` submodule. |
 | `graphics/x86_64/` | The same render server for x86_64, which runs under Rosetta, and UTM's [d3dmetal-native](https://github.com/utmapp/d3dmetal-native) (`lib/libd3dmetal-native.dylib`, MIT, the pinned `d3dmetal-native` source with `patches/d3dmetal-native`), which hosts Apple's D3DMetal in it. D3DMetal is x86_64 only. The backend loads the runtime's own `lib/external/D3DMetal.framework`, unmodified: the Linux engine has no copy. |
 | `steam/` | Valve's Linux `steamclient.so` and `crashhandler.so` in `linux64/`, from the `steam-linux` package of Valve's client CDN (`bins_sdk_ubuntu12`, the build of Obelisk's macOS `steamclient.dylib`), unmodified. `steamclient.dll` and `steamclient64.dll` are links to the release's `steam/` folder. |
 | `guest/` | `steam-hostpid.so`, from voile-lkd, built with zig. Preloaded in the guest, it makes Valve's `steamclient.so` report the macOS pid of its process, which Obelisk's Steam host checks. |
-| `windows/` | Neptune's `d3d11.dll`, `dxgi.dll` and `d3d12.dll`, built from the `neptune` submodule, which a launch copies into the prefix (`WINEDLLOVERRIDES=d3d11,dxgi,d3d12=n`). |
+| `windows/` | Neptune's 64-bit `d3d11.dll`, `dxgi.dll` and `d3d12.dll`, built from the `neptune` submodule, which a launch copies into the prefix (`WINEDLLOVERRIDES=d3d11,dxgi,d3d12=n`). |
 | `root/` | The Debian trixie amd64 root the guest runs on, the `debian-root` archive (`linux/root`, `import-debian-root.sh`), plus `/etc/ld.so.preload`, which names `/opt/obelisk/steam-hostpid.so`. |
 
 ### How a launch assembles it
@@ -132,7 +132,7 @@ brew install xz                      # package.sh compresses with it, on every c
 ./scripts/publish.sh v26.3.0-1       # the GitHub release, tagged on the packaged commit
 ```
 
-`package.sh` refuses uncommitted changes, builds both engines, and drops the debug information, which takes the runtime from about 1 GB to 400 MB. Before it finishes, it extracts the archive, runs the 64-bit and 32-bit `cmd.exe` in a new prefix, and runs `cmd` through the Linux engine. The archive holds one folder with:
+`package.sh` refuses uncommitted changes, builds both engines, and drops the debug information, which takes the runtime from about 1 GB to 400 MB. Before it finishes, it extracts the archive and runs the 64-bit and 32-bit `cmd.exe` in a new prefix with each engine. A Linux-engine run fails if it lasts more than 10 minutes or ends on a signal, even when `cmd.exe` printed its version. The archive holds one folder with:
 
 - the runtime, with Valve's steamclient libraries in `steam/` and Wine Mono in `share/wine/mono`,
 - the graphics backends: D3DMetal's DLLs in `lib/d3dmetal` and its framework in `lib/external`, laid in after stripping so they stay unmodified, with Apple's notices in `licenses/d3dmetal`, and DXMT's in `lib/dxmt`,

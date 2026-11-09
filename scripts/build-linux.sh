@@ -33,7 +33,8 @@ export PATH="/opt/homebrew/opt/bison/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/home
 export MACOSX_DEPLOYMENT_TARGET=26.0
 export ZIG_GLOBAL_CACHE_DIR="$LINUX/zig-cache" ZIG_LOCAL_CACHE_DIR="$LINUX/zig-cache-local"
 # What the guest Wine does without: no X11, no system audio or Vulkan (wsd, wineobeliskaudio and Neptune replace them).
-WINE_OPTIONS=(--enable-win64 --enable-archs=x86_64 --disable-tests --without-x --without-fontconfig
+# i386 adds the PE modules of new WoW64, which runs 32-bit programs in 64-bit processes: the unix side stays x86-64 only.
+WINE_OPTIONS=(--enable-win64 --enable-archs=i386,x86_64 --disable-tests --without-x --without-fontconfig
     --without-pulse --without-alsa --without-cups --without-sdl --without-vulkan
     --without-opengl --without-dbus --without-udev --without-usb --without-v4l2 --without-gphoto --without-sane
     --without-pcap --without-krb5 --without-oss --without-capi --without-netapi --without-unwind
@@ -219,7 +220,8 @@ build_wine() {
             dlldir="$STAGE/wine/lib/wine" datadir="$STAGE/wine/share" fontdir="$STAGE/wine/share/wine/fonts" \
             nlsdir="$STAGE/wine/share/wine/nls"
     )
-    # A 64-bit-only build installs the loader under lib/wine/x86_64-unix; bin/wine points at it.
+    # A build with only x86-64 unix libraries (new WoW64 for 32-bit programs) installs the loader under
+    # lib/wine/x86_64-unix; bin/wine points at it.
     ln -sf ../lib/wine/x86_64-unix/wine "$STAGE/wine/bin/wine"
     mv "$unix/wine-preloader" "$unix/$WINE_PRELOADER"
     ln -s "$WINE_PRELOADER" "$unix/wine-preloader"

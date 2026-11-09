@@ -160,29 +160,41 @@ EOF
 }
 
 # Extracted anywhere, the archive must create a prefix and run Windows programs
-# of both architectures, and run one through the Linux engine.
+# of both architectures, with each engine.
 verify() {
-    local root="$WORK/verify" output program
+    local root="$WORK/verify" output program status programs=(cmd 'C:\windows\syswow64\cmd.exe')
     rm -rf "$root"
     mkdir -p "$root"
     tar -xJf "$ARCHIVE" -C "$root"
     local wine="$root/$NAME/bin/wine" prefix="WINEPREFIX=$root/prefix"
     env "$prefix" "${WINE_ENVIRONMENT[@]}" "$wine" wineboot --init
-    for program in cmd 'C:\windows\syswow64\cmd.exe'; do
+    for program in "${programs[@]}"; do
         output="$(env "$prefix" "${WINE_ENVIRONMENT[@]}" "$wine" "$program" /c ver)"
         [[ "$output" == *Windows* ]] || fail "$program did not run from the archive: $output"
     done
     env "$prefix" "$root/$NAME/bin/wineserver" -w
+    # The first run creates the prefix, and wineboot's Wow64Install pass runs 32-bit code in it. The 32-bit cmd
+    # runs Wine's i386 modules in a 64-bit process (new WoW64), which needs the engine to serve WoW64's int $0x80
+    # set_thread_area and its mov to %fs in 64-bit code. If wineboot hangs, cmd still prints its version after
+    # 5 minutes and wineserver -w waits until the timeout, so a run that the timeout or a signal stops
+    # (128 + signal) fails whatever it printed.
     local linux="$root/$NAME/linux"
     mkdir -p "$root/home"
-    output="$(FEXDARWIN_LKD=1 FEXDARWIN_ROOT="$linux/root" FEXDARWIN_ROOT_RO=1 \
-        FEXDARWIN_BIND="/opt/wine=$linux/wine:ro;/home/user=$root/home" \
-        "$linux/engine/run-with-timeout.sh" 600 "$linux/engine/fexdarwin-run" \
-        --env HOME=/home/user --env USER=user --env PATH=/opt/wine/bin:/usr/bin:/bin \
-        --env WINEPREFIX=/home/user/prefix --env WINEDEBUG=-all \
-        --env 'WINEDLLOVERRIDES=mscoree,mshtml=;winemenubuilder.exe=d' \
-        /bin/sh -c '/opt/wine/bin/wine cmd /c ver; /opt/wine/bin/wineserver -w' 2>/dev/null)" || true
-    [[ "$output" == *Windows* ]] || fail "cmd did not run through the Linux engine from the archive: $output"
+    for program in "${programs[@]}"; do
+        status=0
+        output="$(FEXDARWIN_LKD=1 FEXDARWIN_ROOT="$linux/root" FEXDARWIN_ROOT_RO=1 \
+            FEXDARWIN_BIND="/opt/wine=$linux/wine:ro;/home/user=$root/home" \
+            "$linux/engine/run-with-timeout.sh" 600 "$linux/engine/fexdarwin-run" \
+            --env HOME=/home/user --env USER=user --env PATH=/opt/wine/bin:/usr/bin:/bin \
+            --env WINEPREFIX=/home/user/prefix --env WINEDEBUG=-all \
+            --env 'WINEDLLOVERRIDES=mscoree,mshtml=;winemenubuilder.exe=d' \
+            /bin/sh -c "/opt/wine/bin/wine '$program' /c ver; /opt/wine/bin/wineserver -w" 2>/dev/null)" ||
+            status=$?
+        ((status < 128)) ||
+            fail "$program was stopped on the Linux engine ($status: the 600 s timeout or a signal): $output"
+        [[ "$output" == *Windows* ]] ||
+            fail "$program did not run through the Linux engine from the archive: $output"
+    done
     rm -rf "$root"
 }
 
