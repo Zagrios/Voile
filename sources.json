@@ -63,9 +63,21 @@
     "url": "https://deb.debian.org/debian/pool/main/g/gnutls28/libgnutls28-dev_3.8.9-3+deb13u4_amd64.deb",
     "sha256": "f7048cead574f6142449a3b4089b042a42372a6b76d900324156ae97dbeb08ed"
   },
+  "debian-gio-dev": {
+    "url": "https://snapshot.debian.org/archive/debian/20260831T204404Z/pool/main/g/glib2.0/libgio-2.0-dev_2.84.4-3~deb13u5_amd64.deb",
+    "sha256": "a9bbd748ddd40a08b336e8d6b1755e698957ac640d081ddc4c330b716c6b89c3"
+  },
+  "debian-gst-plugins-base-dev": {
+    "url": "https://snapshot.debian.org/archive/debian/20260319T144518Z/pool/main/g/gst-plugins-base1.0/libgstreamer-plugins-base1.0-dev_1.26.2-1+deb13u1_amd64.deb",
+    "sha256": "1c2c423ad35de9a7bbe65eda47e4901c94ec92c78e16d679b41d1f81bb49517f"
+  },
+  "debian-gstreamer-dev": {
+    "url": "https://snapshot.debian.org/archive/debian/20250630T203427Z/pool/main/g/gstreamer1.0/libgstreamer1.0-dev_1.26.2-2_amd64.deb",
+    "sha256": "40fbcf46c24fa453c96134bb868b1ad664c7815c0cb512cc0ba3c949371f1296"
+  },
   "debian-root": {
-    "url": "https://github.com/Zagrios/voile/releases/download/debian-root-trixie-20260928/debian-root-trixie-20260928.tar.xz",
-    "sha256": "63574294f3831673adf3928e19c9211a0fd258b03ef81ca831b24587dbaa5f4d"
+    "url": "https://github.com/Zagrios/voile/releases/download/debian-root-trixie-20261109/debian-root-trixie-20261109.tar.xz",
+    "sha256": "3f5f6f40ff9143d2bcc59377e7d7be7f8edd14723c85d75e6b9c5b0c4320f037"
   },
   "debian-x11proto-dev": {
     "url": "https://deb.debian.org/debian/pool/main/x/xorgproto/x11proto-dev_2024.1-1_all.deb",
