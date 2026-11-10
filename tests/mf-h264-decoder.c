@@ -4,13 +4,24 @@
  * and exits 0 once frames decoded and the first one's centre has the expected
  * luma, if one is given.
  *
+ * With d3d11 it first hands the decoder a Direct3D 11 device, as a sink that
+ * wants its frames in textures does, and prints what the decoder answers and
+ * where the frames then are. With d3d11-early the device comes before the
+ * output format is chosen, when the decoder cannot tell yet whether the device
+ * can hold its frames. The frames must decode every time: a decoder given a
+ * device that cannot make textures of its frames has to keep decoding to
+ * system memory.
+ *
  * x86_64-w64-mingw32-clang -O2 -o mf-h264-decoder.exe mf-h264-decoder.c \
- *     -lmfplat -lmfuuid -lole32
+ *     -lmfplat -lmfuuid -lole32 -ld3d11 -ldxguid
  * ffmpeg -i movie.mp4 -an -c:v copy -bsf:v h264_mp4toannexb -f h264 movie.h264
  * mf-h264-decoder.exe movie.h264 100
+ * mf-h264-decoder.exe movie.h264 100 d3d11
+ * mf-h264-decoder.exe movie.h264 100 d3d11-early
  */
 #define COBJMACROS
 #include <windows.h>
+#include <d3d11.h>
 #include <mfapi.h>
 #include <mftransform.h>
 #include <mferror.h>
@@ -22,6 +33,7 @@ static const GUID decoder_clsid =
 
 static unsigned frames;
 static int first_luma = -1;
+static int first_in_texture = -1;
 static UINT32 width, height;
 
 /* Picks NV12 when the decoder offers it, else the first format, and prints
@@ -88,6 +100,17 @@ static HRESULT drain_output(IMFTransform *decoder)
             continue;
         }
         if (SUCCEEDED(hr)) {
+            if (!frames) {
+                IMFMediaBuffer *first;
+                IMFDXGIBuffer *texture;
+                if (SUCCEEDED(IMFSample_GetBufferByIndex(output.pSample, 0, &first))) {
+                    first_in_texture = SUCCEEDED(IMFMediaBuffer_QueryInterface(first, &IID_IMFDXGIBuffer,
+                        (void **)&texture));
+                    if (first_in_texture)
+                        IMFDXGIBuffer_Release(texture);
+                    IMFMediaBuffer_Release(first);
+                }
+            }
             if (!frames++ && width && height) {
                 IMFMediaBuffer *contiguous;
                 BYTE *data;
@@ -118,6 +141,42 @@ static HRESULT drain_output(IMFTransform *decoder)
     }
 }
 
+/* Gives the decoder a new Direct3D 11 device through a DXGI device manager,
+ * when the decoder says it takes one. */
+static void give_device(IMFTransform *decoder)
+{
+    IMFDXGIDeviceManager *manager;
+    IMFAttributes *attributes;
+    ID3D11Device *device;
+    UINT32 aware = 0;
+    UINT token;
+    HRESULT hr;
+
+    if (SUCCEEDED(IMFTransform_GetAttributes(decoder, &attributes))) {
+        IMFAttributes_GetUINT32(attributes, &MF_SA_D3D11_AWARE, &aware);
+        IMFAttributes_Release(attributes);
+    }
+    printf("decoder takes a Direct3D 11 device: %s\n", aware ? "yes" : "no");
+    if (!aware)
+        return;
+    hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_VIDEO_SUPPORT, NULL, 0, D3D11_SDK_VERSION,
+        &device, NULL, NULL);
+    if (FAILED(hr))
+        hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_BGRA_SUPPORT, NULL, 0,
+            D3D11_SDK_VERSION, &device, NULL, NULL);
+    if (FAILED(hr)) {
+        printf("no Direct3D 11 device, %#lx\n", hr);
+        return;
+    }
+    MFCreateDXGIDeviceManager(&token, &manager);
+    IMFDXGIDeviceManager_ResetDevice(manager, (IUnknown *)device, token);
+    hr = IMFTransform_ProcessMessage(decoder, MFT_MESSAGE_SET_D3D_MANAGER, (ULONG_PTR)manager);
+    printf("device %s, %#lx\n", SUCCEEDED(hr) ? "accepted" : "refused", hr);
+    fflush(stdout);
+    /* Both stay alive until the process ends, as a sink keeps them. */
+}
+
 int main(int argc, char **argv)
 {
     IMFTransform *decoder;
@@ -129,7 +188,7 @@ int main(int argc, char **argv)
     int expected = -1;
 
     if (argc < 2) {
-        fprintf(stderr, "usage: mf-h264-decoder.exe <stream.h264> [luma]\n");
+        fprintf(stderr, "usage: mf-h264-decoder.exe <stream.h264> [luma] [d3d11|d3d11-early]\n");
         return 2;
     }
     if (!(file = fopen(argv[1], "rb"))) {
@@ -157,10 +216,14 @@ int main(int argc, char **argv)
         printf("input type refused, %#lx\n", hr);
         return 1;
     }
+    if (argc > 3 && !strcmp(argv[3], "d3d11-early"))
+        give_device(decoder);
     if (FAILED(hr = choose_output(decoder))) {
         printf("output type refused, %#lx\n", hr);
         return 1;
     }
+    if (argc > 3 && !strcmp(argv[3], "d3d11"))
+        give_device(decoder);
     IMFTransform_ProcessMessage(decoder, MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
     IMFTransform_ProcessMessage(decoder, MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
 
@@ -196,6 +259,8 @@ int main(int argc, char **argv)
     drain_output(decoder);
 
     printf("frames: %u, first centre luma %d\n", frames, first_luma);
+    if (first_in_texture >= 0)
+        printf("frames are in %s\n", first_in_texture ? "textures" : "system memory");
     if (argc > 2) {
         expected = atoi(argv[2]);
         printf("luma: %s\n", abs(first_luma - expected) <= 10 ? "as expected" : "wrong");
