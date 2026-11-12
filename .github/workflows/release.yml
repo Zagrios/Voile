@@ -3,7 +3,9 @@
 # its SHA-256. Each submodule first moves to the latest commit of its main, and
 # that move is committed to main, so the release's commit names what it built.
 # Run it from the Actions tab with the version. Publish the draft by hand once
-# it is checked; publishing creates the tag on the packaged commit.
+# it is checked; publishing creates the tag on the packaged commit. The Beta
+# workflow builds betas with it, such as v26.3.0-26.beta1, and publishes them
+# at once as pre-releases, with the commits since the tag `since` as notes.
 name: Release
 
 on:
@@ -11,6 +13,16 @@ on:
     inputs:
       version:
         description: Version, v<CrossOver version>-<revision>, such as v26.3.0-14
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: Beta version, v<CrossOver version>-<revision>.beta<n>
+        required: true
+        type: string
+      since:
+        description: The tag the beta's notes start from
         required: true
         type: string
 
@@ -29,6 +41,7 @@ jobs:
     timeout-minutes: 360
     env:
       VERSION: ${{ inputs.version }}
+      SINCE: ${{ inputs.since }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Check the version
@@ -37,16 +50,41 @@ jobs:
             echo "::error::Run the release from main: it commits the submodules' new commits there."
             exit 1
           fi
-          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]]; then
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+(\.beta[0-9]+)?$ ]]; then
             echo "::error::$VERSION is not v<CrossOver version>-<revision>, such as v26.3.0-14."
+            exit 1
+          fi
+          if [[ "$VERSION" == *.beta* && -z "$SINCE" ]]; then
+            echo "::error::Only the Beta workflow builds betas."
             exit 1
           fi
           if gh release view "$VERSION" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "::error::A release $VERSION already exists."
             exit 1
           fi
+          if [[ "$VERSION" == *.beta* ]]; then
+            # A deleted release leaves its tag, which publishing would refuse after hours of building; exit code 2
+            # alone means GitHub has no such tag.
+            status=0
+            git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/$VERSION" \
+              > /dev/null || status=$?
+            if [[ "$status" != 2 ]]; then
+              echo "::error::A tag $VERSION already exists, or GitHub could not say."
+              exit 1
+            fi
+            # A beta of a revision already released would reach no player.
+            if gh release view "${VERSION%.beta*}" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "::error::${VERSION%.beta*} is already released."
+              exit 1
+            fi
+          fi
 
+      # main as it is now, not as it was when the run was queued: the build commits on top of it. A beta's notes
+      # read the history since the tag `since`.
       - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Check out the submodules at their main
         run: |
@@ -74,7 +112,14 @@ jobs:
             git config user.email 40181755+Zagrios@users.noreply.github.com
             git commit --quiet -m "Build $VERSION from the submodules' main" -m "$(printf '%s\n' "${moved[@]}")" \
               wine voile-lkd neptune dxmt
-            git push origin HEAD:main
+            # Feed may have committed to main since the checkout.
+            for attempt in 1 2 3 4 5; do
+              git pull --quiet --rebase origin main && git push origin HEAD:main && break
+              [[ "$attempt" -lt 5 ]] || exit 1
+              sleep 10
+            done
+            # A submodule someone else moved meanwhile builds as main now pins it.
+            git submodule update --depth 1 wine voile-lkd neptune dxmt
           fi
           git log -1 --format='%h %s'
 
@@ -114,8 +159,14 @@ jobs:
       - name: Build and package
         run: PATH="$PWD/build/pyenv/bin:$PATH" ./scripts/package.sh "$VERSION"
 
-      - name: Draft the release
-        run: ./scripts/publish.sh "$VERSION" --draft
+      - name: Draft the release, or publish the beta
+        run: |
+          if [[ "$VERSION" != *.beta* ]]; then
+            ./scripts/publish.sh "$VERSION" --draft
+            exit 0
+          fi
+          ./scripts/beta.sh --notes "$SINCE" > "$RUNNER_TEMP/notes.md"
+          ./scripts/publish.sh "$VERSION" "$RUNNER_TEMP/notes.md"
 
       - name: Show the disk space left
         if: always()

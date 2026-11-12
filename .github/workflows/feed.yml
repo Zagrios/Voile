@@ -1,14 +1,26 @@
 # Keeps voile-feed.json, the releases Obelisk picks its runtime from, and its
-# signature. Publishing a release adds it. Run it from the Actions tab with a
-# version to write that release's entry again, such as after editing its
-# notes, or with a reason to withdraw it:
-# Obelisk then leaves it for the newest release left. An empty reason puts a
-# withdrawn release back.
+# signature. Publishing a release adds it; a pre-release goes in the feed's
+# pre-release list, which only players who take beta releases read, and turning
+# it into a release moves it. Run it from the Actions tab with a version to
+# write that release's entry again, such as after editing its notes or turning
+# a release back into a pre-release, or with a reason to withdraw it: Obelisk
+# then leaves it for the newest release left. An empty reason puts a withdrawn
+# release back.
 name: Feed
 
 on:
   release:
-    types: [published]
+    types: [published, released]
+  # The Beta workflow runs it after each beta: a release its token makes starts no workflow.
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      withdrawn:
+        required: false
+        type: string
+        default: ""
   workflow_dispatch:
     inputs:
       version:
@@ -30,8 +42,12 @@ concurrency:
 
 jobs:
   feed:
-    # Only runtime releases, never the archives sources.json pins.
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v')
+    # Only runtime releases, never the archives sources.json pins. A release published fires `published` and
+    # `released`: the second writes it.
+    if: >-
+      github.event_name != 'release'
+      || (startsWith(github.event.release.tag_name, 'v')
+        && (github.event.action != 'published' || github.event.release.prerelease))
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ github.event.release.tag_name || inputs.version }}

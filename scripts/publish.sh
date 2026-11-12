@@ -1,12 +1,15 @@
 #!/bin/bash
 # Publishes the archive package.sh made as the GitHub release of its version,
 # tagged on the commit it was built from. With --draft, the release stays a
-# draft, and GitHub creates its tag when it is published.
+# draft, and GitHub creates its tag when it is published. A beta, such as
+# v26.3.0-26.beta1, is published at once as a GitHub pre-release, which only
+# players who take beta versions get, with the Markdown file NOTES after the
+# components instead of GitHub's notes.
 set -euo pipefail
 RUNTIME="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$RUNTIME/build"
 VERSION="${1:-}"
-DRAFT="${2:-}"
+OPTION="${2:-}"
 NAME="voile-$VERSION"
 MANIFEST="$WORK/package/$NAME/runtime.json"
 ARCHIVE="$WORK/release/$NAME.tar.xz"
@@ -20,8 +23,12 @@ value() {
     plutil -extract "$1" raw -o - "$MANIFEST"
 }
 
-[[ -n "$VERSION" && ( -z "$DRAFT" || "$DRAFT" == --draft ) ]] ||
-    fail "Usage: publish.sh v<CrossOver version>-<revision> [--draft]"
+if [[ "$VERSION" == *.beta* ]]; then
+    [[ -f "$OPTION" ]] || fail "Usage: publish.sh v<CrossOver version>-<revision>.beta<n> NOTES"
+else
+    [[ -n "$VERSION" && ( -z "$OPTION" || "$OPTION" == --draft ) ]] ||
+        fail "Usage: publish.sh v<CrossOver version>-<revision> [--draft]"
+fi
 [[ "$VERSION" != *-dev* ]] || fail "$VERSION is a local build: a -dev package is never published"
 [[ -f "$MANIFEST" && -f "$ARCHIVE" ]] || fail "Package it first: ./scripts/package.sh $VERSION"
 (cd "$WORK/release" && shasum -a 256 -c -s "$NAME.tar.xz.sha256") ||
@@ -44,11 +51,14 @@ notes="CrossOver $(value crossover), Zagrios/voile-wine@$(value voile-wine),"
 notes+=" ValveSoftware/Proton@$(value proton), D3DMetal from $(value d3dmetal)."
 notes+=" Linux engine: voile-lkd@$(value linux.voile-lkd), neptune@$(value linux.neptune),"
 notes+=" dxmt@$(value linux.dxmt), $(value linux.debian-root)."
+release=(gh release create "$VERSION" "$ARCHIVE" "$ARCHIVE.sha256" --target "$commit" --title "$VERSION")
+if [[ "$VERSION" == *.beta* ]]; then
+    "${release[@]}" --prerelease --notes "$notes"$'\n\n'"$(cat "$OPTION")"
+    exit 0
+fi
 # GitHub's generated notes follow, from the previous runtime release: d3dmetal-, dxmt- and debian-root- releases
-# hold parts.
-previous="$(gh release list --exclude-drafts --limit 100 --json tagName,createdAt \
-    --jq "[.[] | select((.tagName | test(\"^v[0-9]\")) and .tagName != \"$VERSION\")] | sort_by(.createdAt) | last
-        | .tagName // empty")"
-gh release create "$VERSION" "$ARCHIVE" "$ARCHIVE.sha256" \
-    --target "$commit" --title "$VERSION" --notes "$notes" --generate-notes \
-    ${previous:+--notes-start-tag "$previous"} ${DRAFT:+--draft}
+# hold parts. Every release is read: betas, up to twelve a day, would push it out of a shorter list.
+previous="$(gh release list --limit 10000 --json tagName,isDraft,createdAt \
+    --jq ".[] | select((.isDraft | not) and (.tagName | test(\"^v[0-9]\")) and (.tagName | test(\"beta\") | not)
+        and .tagName != \"$VERSION\") | [.createdAt, .tagName] | @tsv" | sort | tail -n 1 | cut -f 2)"
+"${release[@]}" --notes "$notes" --generate-notes ${previous:+--notes-start-tag "$previous"} ${OPTION:+--draft}
