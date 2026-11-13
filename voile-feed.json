@@ -91,5 +91,16 @@
       "sha256": "e9ede5c94a2723efbbd5e79d882bb05a979e3fa8a6262ed48ad052a7af5f63ef",
       "notes": "CrossOver 26.3.0, Zagrios/voile-wine@20b4f0a3069ecc436ba030179b63f055b89aefbb, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@dea086fe06302a3d25049692bab332a9e1b9a82f, neptune@ac599b49cccd1a761973c214d71dd2b38de4e69a, dxmt@85c51603a49b806af22ac5d8a3c040dc92f993df, debian-root-trixie-20260928.\n**Full Changelog**: https://github.com/Zagrios/Voile/compare/v26.3.0-15...v26.3.0-16"
     }
+  ],
+  "prereleases": [
+    {
+      "version": "v26.3.0-26.beta1",
+      "contract": 1,
+      "published": "2026-11-13",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26.beta1/voile-v26.3.0-26.beta1.tar.xz",
+      "size": 505926036,
+      "sha256": "88adf476b9ee8d918ace1bd5132f2fd01f8ddafe073b16b8bc37804eb7e3f37e",
+      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@803742d9cca06bae1151ab88c81ac4df061868bf, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@b4d04c642884f315192d1c6b679917a8078a2795, neptune@08eb732ed8f77a7675455a86d79d8a24a5c6c928, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at 9b09d61. Changes since v26.3.0-25:\n\n### Voile\n\n- Offer betas in the feed, built from main every two hours (8fbb190)\n- Test the H.264 decoder with a Direct3D 11 device (da18cde)\n\n### Zagrios/voile-wine\n\n- winegstreamer: Decode to system memory when the Direct3D 11 device cannot make textures of the frames. (8a10ac9)\n- wineobelisk: List 16:10 and 21:9 display modes. (803742d)"
+    }
   ]
 }
