@@ -94,6 +94,15 @@
   ],
   "prereleases": [
     {
+      "version": "v26.3.0-26.beta2",
+      "contract": 1,
+      "published": "2026-11-15",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26.beta2/voile-v26.3.0-26.beta2.tar.xz",
+      "size": 505925408,
+      "sha256": "1108e8025d6e824a9cb6ae388ea5db24413e5da70ea6db547976cdbdb9f27d5c",
+      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@8dfea6b8073a22f2e44f244d0847f6b016cb35f7, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@71e125af9ea37f85834495eb4a5d82fb40895cc2, neptune@d4b6341c27019fd3ee1b634211f201aaabbfe27a, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at ee19813. Changes since v26.3.0-26.beta1:\n\n### Voile\n\n- Patch d3dmetal-native to keep shader-written reserved textures off sparse heaps, for Unreal's virtual shadow maps (#5) (0b76409)\n\n### Zagrios/voile-wine\n\n- windows.networking.connectivity: Implement IConnectionProfile::GetConnectionCost. (#17) (8dfea6b)\n\n### Zagrios/voile-lkd\n\n- wsd: End the game when wsd is stopped while it still has windows. (#19) (655998e)\n- lkd: Read a thread's times for getrusage(RUSAGE_THREAD) at most once a millisecond. (#24) (44c6598)\n- wsd: Put the pointer where the frame shows it when a window shows a frame of another size. (#20) (326dea1)\n- wsd: Take a warp's jump out of the next move, hold a clip only with the focus, and hide a window 100 ms late. (#21) (9279b46)\n- lkd: Implement System V semaphores, which Valve's Linux steamclient builds its thread sync objects on. (#18) (71e125a)\n\n### Zagrios/neptune\n\n- neptune: Wake a queue Wait when its Signal is dispatched instead of polling. (#12) (4532c9a)\n- neptune: Answer three hot synchronous D3D12/DXGI queries in the guest. (#13) (d4b6341)"
+    },
+    {
       "version": "v26.3.0-26.beta1",
       "contract": 1,
       "published": "2026-11-13",
