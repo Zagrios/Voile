@@ -94,6 +94,15 @@
   ],
   "prereleases": [
     {
+      "version": "v26.3.0-26.beta3",
+      "contract": 1,
+      "published": "2026-11-16",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26.beta3/voile-v26.3.0-26.beta3.tar.xz",
+      "size": 505929044,
+      "sha256": "cc0a7c03c03c8e2fd0115f9eb412153b03fb0af23357bbd0176753edb9bdf108",
+      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@a4f18ecd58eb70a41b04a3890d693efed42bb800, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@71e125af9ea37f85834495eb4a5d82fb40895cc2, neptune@be783d9a2b2926dc7766405667e9a2bce5a1689f, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at 1f1c07b. Changes since v26.3.0-26.beta2:\n\n### Zagrios/voile-wine\n\n- nptunix: Give each swapchain its own wsd WSI state. (#18) (a4f18ec)\n\n### Zagrios/neptune\n\n- neptune: Give each swapchain its own WSI instance. (#16) (be783d9)"
+    },
+    {
       "version": "v26.3.0-26.beta2",
       "contract": 1,
       "published": "2026-11-15",
