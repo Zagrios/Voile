@@ -1,0 +1,163 @@
+Refuse a graphics pipeline that Direct3D 12 refuses and Metal would abort the
+render server on, with E_INVALIDARG, instead of handing it to D3DMetal:
+a render-target format that cannot be rendered to, a depth-stencil format that
+cannot be bound as depth-stencil, a sample count the format cannot take, more
+than 8 render targets, or an input layout of more than 32 elements or with a
+slot past 31. Alpha to coverage on an integer render target, which the
+hardware ignores, is dropped instead. Only formats the format table describes
+are judged, as in CheckFeatureSupport.
+
+Hunt: Showdown 1896 asks for a pipeline with a BC6H_UF16 render target while it
+precaches pipelines after sign-in. Metal's descriptor validation aborted the
+render server ("MTLPixelFormatBC6H_RGBUfloat is not color renderable") and the
+game quit with DXGI_ERROR_DRIVER_INTERNAL_ERROR. With this patch the game gets
+E_INVALIDARG, as on Windows, and carries on to the main menu. The input-layout
+and alpha-to-coverage cases came out of a sweep of pipelines with every DXGI
+format; each aborted the render server the same way.
+
+Only CreateGraphicsPipelineState is hooked at this pin. The pipeline-stream and
+pipeline-library paths reach D3DMetal unchecked; the same test fits there once
+they are hooked.
+
+diff --git a/src/dmn_com_hooks.cpp b/src/dmn_com_hooks.cpp
+index 67b987c..b84ce61 100644
+--- a/src/dmn_com_hooks.cpp
++++ b/src/dmn_com_hooks.cpp
+@@ -3201,6 +3201,109 @@ struct DmnNormalizedStage {
+     }
+ };
+ 
++/* == Pipelines Metal would abort on ======================================== */
++
++/* Direct3D 12 refuses a graphics pipeline whose render-target or
++ * depth-stencil format cannot be bound that way, or whose sample count the
++ * format cannot take, with E_INVALIDARG.  D3DMetal hands such a pipeline to
++ * Metal, whose descriptor validation aborts the render server
++ * ("MTLPixelFormatBC6H_RGBUfloat is not color renderable"), and the game sees
++ * DXGI_ERROR_DRIVER_INTERNAL_ERROR.  Hunt: Showdown 1896 asks for one with a
++ * BC6H_UF16 target while it precaches pipelines.  Only formats the table
++ * describes are judged, as in CheckFeatureSupport; every slot is looked at,
++ * since a slot past NumRenderTargets must be UNKNOWN anyway. */
++static bool dmn_pso_targets_refused(UINT count, const DXGI_FORMAT* rtv,
++                                    DXGI_FORMAT dsv, UINT samples) {
++    if (count > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
++        DMN_WARN("pso: %u render targets; refusing as Direct3D 12 does", count);
++        return true;
++    }
++    for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++) {
++        if (rtv[i] == DXGI_FORMAT_UNKNOWN)
++            continue;
++        uint32_t support = 0;
++        if (!dmn_format_support((uint32_t)rtv[i], &support))
++            continue;
++        if (!(support & DMN_FMT_SUPPORT_RENDER_TARGET)) {
++            DMN_WARN("pso: render target %u has DXGI format %u, which cannot be "
++                     "rendered to; refusing as Direct3D 12 does",
++                     i, (unsigned)rtv[i]);
++            return true;
++        }
++        if (i < count && samples > 1 &&
++            !dmn_format_msaa_ok((uint32_t)rtv[i], samples)) {
++            DMN_WARN("pso: render target %u (DXGI format %u) cannot take %u "
++                     "samples; refusing as Direct3D 12 does",
++                     i, (unsigned)rtv[i], samples);
++            return true;
++        }
++    }
++    if (dsv != DXGI_FORMAT_UNKNOWN) {
++        uint32_t support = 0;
++        if (dmn_format_support((uint32_t)dsv, &support)) {
++            if (!(support & DMN_FMT_SUPPORT_DEPTH_STENCIL)) {
++                DMN_WARN("pso: depth-stencil DXGI format %u cannot be bound as "
++                         "depth-stencil; refusing as Direct3D 12 does",
++                         (unsigned)dsv);
++                return true;
++            }
++            if (samples > 1 && !dmn_format_msaa_ok((uint32_t)dsv, samples)) {
++                DMN_WARN("pso: depth-stencil DXGI format %u cannot take %u "
++                         "samples; refusing as Direct3D 12 does",
++                         (unsigned)dsv, samples);
++                return true;
++            }
++        }
++    }
++    return false;
++}
++
++/* Direct3D 12 refuses an input layout of more than 32 elements or with an
++ * element in an input slot past 31.  D3DMetal turns such a slot into an
++ * invalid Metal value and Metal aborts the render server
++ * ("inputPrimitiveTopology value (1048579) is invalid"). */
++static bool dmn_pso_input_refused(const D3D12_INPUT_LAYOUT_DESC& layout) {
++    if (!layout.NumElements)
++        return false;
++    if (layout.NumElements > 32 /* D3D12_IA_VERTEX_INPUT_STRUCTURE_ELEMENT_COUNT */ ||
++        !layout.pInputElementDescs) {
++        DMN_WARN("pso: input layout of %u elements; refusing as Direct3D 12 "
++                 "does", layout.NumElements);
++        return true;
++    }
++    for (UINT i = 0; i < layout.NumElements; i++)
++        if (layout.pInputElementDescs[i].InputSlot >=
++            D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT) {
++            DMN_WARN("pso: input element %u is in slot %u; refusing as "
++                     "Direct3D 12 does", i,
++                     layout.pInputElementDescs[i].InputSlot);
++            return true;
++        }
++    return false;
++}
++
++/* Integer render-target formats, for which alpha to coverage means nothing:
++ * the hardware ignores it, while Metal's descriptor validation aborts on it
++ * ("alphaToCoverageEnabled requires a float/unorm pixel format"). */
++static bool dmn_dxgi_is_integer(DXGI_FORMAT f) {
++    switch (f) {
++    case DXGI_FORMAT_R32G32B32A32_UINT: case DXGI_FORMAT_R32G32B32A32_SINT:
++    case DXGI_FORMAT_R32G32B32_UINT: case DXGI_FORMAT_R32G32B32_SINT:
++    case DXGI_FORMAT_R16G16B16A16_UINT: case DXGI_FORMAT_R16G16B16A16_SINT:
++    case DXGI_FORMAT_R32G32_UINT: case DXGI_FORMAT_R32G32_SINT:
++    case DXGI_FORMAT_R10G10B10A2_UINT:
++    case DXGI_FORMAT_R8G8B8A8_UINT: case DXGI_FORMAT_R8G8B8A8_SINT:
++    case DXGI_FORMAT_R16G16_UINT: case DXGI_FORMAT_R16G16_SINT:
++    case DXGI_FORMAT_R32_UINT: case DXGI_FORMAT_R32_SINT:
++    case DXGI_FORMAT_R8G8_UINT: case DXGI_FORMAT_R8G8_SINT:
++    case DXGI_FORMAT_R16_UINT: case DXGI_FORMAT_R16_SINT:
++    case DXGI_FORMAT_R8_UINT: case DXGI_FORMAT_R8_SINT:
++        return true;
++    default:
++        return false;
++    }
++}
++
+ /* == DXIL input-layout placeholder resolution ============================= */
+ 
+ /* The guest UMD cannot read semantic names out of a bare DXIL program part
+@@ -3216,12 +3319,27 @@ HRESULT STDMETHODCALLTYPE hook_d3d12_CreateGraphicsPipelineState(
+     auto orig = DMN_ORIG(d3d12_CreateGraphicsPipelineState, This);
+     if (!orig)
+         return E_FAIL;
++    if (desc && (dmn_pso_targets_refused(desc->NumRenderTargets,
++                                         desc->RTVFormats, desc->DSVFormat,
++                                         desc->SampleDesc.Count) ||
++                 dmn_pso_input_refused(desc->InputLayout))) {
++        if (out)
++            *out = nullptr;
++        return E_INVALIDARG;
++    }
+     D3D12_GRAPHICS_PIPELINE_STATE_DESC norm;
+     DmnNormalizedStage stages[2];
+     if (desc) {
+         norm = *desc;
+         bool changed = stages[0].apply(norm.VS);
+         changed = stages[1].apply(norm.PS) || changed;
++        if (norm.BlendState.AlphaToCoverageEnable && norm.NumRenderTargets &&
++            dmn_dxgi_is_integer(norm.RTVFormats[0])) {
++            norm.BlendState.AlphaToCoverageEnable = FALSE;
++            changed = true;
++            DMN_INFO("pso: alpha to coverage dropped for integer render "
++                     "target format %u", (unsigned)norm.RTVFormats[0]);
++        }
+         if (changed)
+             desc = &norm;
+     }
