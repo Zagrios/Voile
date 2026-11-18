@@ -20,10 +20,10 @@ pipeline-library paths reach D3DMetal unchecked; the same test fits there once
 they are hooked.
 
 diff --git a/src/dmn_com_hooks.cpp b/src/dmn_com_hooks.cpp
-index 67b987c..b84ce61 100644
+index 67b987c..93b6951 100644
 --- a/src/dmn_com_hooks.cpp
 +++ b/src/dmn_com_hooks.cpp
-@@ -3201,6 +3201,109 @@ struct DmnNormalizedStage {
+@@ -3201,6 +3201,97 @@ struct DmnNormalizedStage {
      }
  };
  
@@ -38,6 +38,23 @@ index 67b987c..b84ce61 100644
 + * BC6H_UF16 target while it precaches pipelines.  Only formats the table
 + * describes are judged, as in CheckFeatureSupport; every slot is looked at,
 + * since a slot past NumRenderTargets must be UNKNOWN anyway. */
++static bool dmn_pso_format_refused(const char* what, DXGI_FORMAT format,
++                                   uint32_t bind, UINT samples) {
++    uint32_t support = 0;
++    if (format == DXGI_FORMAT_UNKNOWN ||
++        !dmn_format_support((uint32_t)format, &support))
++        return false;
++    if (!(support & bind))
++        DMN_WARN("pso: %s has DXGI format %u, which cannot be bound that way; "
++                 "refusing as Direct3D 12 does", what, (unsigned)format);
++    else if (samples > 1 && !dmn_format_msaa_ok((uint32_t)format, samples))
++        DMN_WARN("pso: %s has DXGI format %u, which cannot take %u samples; "
++                 "refusing as Direct3D 12 does", what, (unsigned)format, samples);
++    else
++        return false;
++    return true;
++}
++
 +static bool dmn_pso_targets_refused(UINT count, const DXGI_FORMAT* rtv,
 +                                    DXGI_FORMAT dsv, UINT samples) {
 +    if (count > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
@@ -45,43 +62,14 @@ index 67b987c..b84ce61 100644
 +        return true;
 +    }
 +    for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++) {
-+        if (rtv[i] == DXGI_FORMAT_UNKNOWN)
-+            continue;
-+        uint32_t support = 0;
-+        if (!dmn_format_support((uint32_t)rtv[i], &support))
-+            continue;
-+        if (!(support & DMN_FMT_SUPPORT_RENDER_TARGET)) {
-+            DMN_WARN("pso: render target %u has DXGI format %u, which cannot be "
-+                     "rendered to; refusing as Direct3D 12 does",
-+                     i, (unsigned)rtv[i]);
++        char what[32];
++        snprintf(what, sizeof(what), "render target %u", i);
++        if (dmn_pso_format_refused(what, rtv[i], DMN_FMT_SUPPORT_RENDER_TARGET,
++                                   i < count ? samples : 1))
 +            return true;
-+        }
-+        if (i < count && samples > 1 &&
-+            !dmn_format_msaa_ok((uint32_t)rtv[i], samples)) {
-+            DMN_WARN("pso: render target %u (DXGI format %u) cannot take %u "
-+                     "samples; refusing as Direct3D 12 does",
-+                     i, (unsigned)rtv[i], samples);
-+            return true;
-+        }
 +    }
-+    if (dsv != DXGI_FORMAT_UNKNOWN) {
-+        uint32_t support = 0;
-+        if (dmn_format_support((uint32_t)dsv, &support)) {
-+            if (!(support & DMN_FMT_SUPPORT_DEPTH_STENCIL)) {
-+                DMN_WARN("pso: depth-stencil DXGI format %u cannot be bound as "
-+                         "depth-stencil; refusing as Direct3D 12 does",
-+                         (unsigned)dsv);
-+                return true;
-+            }
-+            if (samples > 1 && !dmn_format_msaa_ok((uint32_t)dsv, samples)) {
-+                DMN_WARN("pso: depth-stencil DXGI format %u cannot take %u "
-+                         "samples; refusing as Direct3D 12 does",
-+                         (unsigned)dsv, samples);
-+                return true;
-+            }
-+        }
-+    }
-+    return false;
++    return dmn_pso_format_refused("depth-stencil", dsv,
++                                  DMN_FMT_SUPPORT_DEPTH_STENCIL, samples);
 +}
 +
 +/* Direct3D 12 refuses an input layout of more than 32 elements or with an
@@ -133,7 +121,7 @@ index 67b987c..b84ce61 100644
  /* == DXIL input-layout placeholder resolution ============================= */
  
  /* The guest UMD cannot read semantic names out of a bare DXIL program part
-@@ -3216,12 +3319,27 @@ HRESULT STDMETHODCALLTYPE hook_d3d12_CreateGraphicsPipelineState(
+@@ -3216,12 +3307,27 @@ HRESULT STDMETHODCALLTYPE hook_d3d12_CreateGraphicsPipelineState(
      auto orig = DMN_ORIG(d3d12_CreateGraphicsPipelineState, This);
      if (!orig)
          return E_FAIL;
