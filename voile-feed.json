@@ -94,6 +94,15 @@
   ],
   "prereleases": [
     {
+      "version": "v26.3.0-26.beta4",
+      "contract": 1,
+      "published": "2026-11-19",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26.beta4/voile-v26.3.0-26.beta4.tar.xz",
+      "size": 505964048,
+      "sha256": "ddec257de1f28c7a365162464c391e7d6415bb6585f2fe37505ae9c8f84a6c1e",
+      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@d96760c4a34cbf180dbefb635478f97ca39c3e89, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@e6564f9302112875b3faf3156bbcc5ac7e271809, neptune@265be8af17861c31f0f121f660d429a47fd3adce, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at fac252d. Changes since v26.3.0-26.beta3:\n\n### Voile\n\n- Patch d3dmetal-native to refuse graphics pipelines Metal would abort on, for Hunt: Showdown 1896 (#6) (5c2541c)\n\n### Zagrios/voile-wine\n\n- nptunix: Reclaim the stalest wsd WSI state when all are in use. (#19) (d96760c)\n\n### Zagrios/voile-lkd\n\n- lkd: Run a process's exit hooks at a group exit, while other threads are still listed. (9027e99)\n- lkd: Give an ntsync anchor's inode to the new object when macOS gives it to a new pipe. (e6564f9)\n\n### Zagrios/neptune\n\n- neptune: Arm a fence event on an event ring that holds no other wait. (#17) (13562ca)\n- neptune: Allow a fence wait a day, not 30 s, before retiring it as device-lost. (#18) (1d6e4d5)\n- neptune: Report an AMD-style UMD version on an AMD adapter. (#19) (265be8a)"
+    },
+    {
       "version": "v26.3.0-26.beta3",
       "contract": 1,
       "published": "2026-11-16",
