@@ -2,6 +2,15 @@
   "format": 1,
   "releases": [
     {
+      "version": "v26.3.0-26",
+      "contract": 1,
+      "published": "2026-11-19",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26/voile-v26.3.0-26.tar.xz",
+      "size": 505972692,
+      "sha256": "16f7b25a8e3c177c6b2ddded3babf7667273d9f7a7f03778bbfca5026a1a47d2",
+      "notes": "Voile v26.3.0-26 makes Direct3D 12 games faster and steadier on the Linux engine, and fixes the mouse, videos and several freezes there, with contributions from @gkaragioul, @k33bs and @LeonMarzollDev! 🛠️🎉\n\n### Features\n\n- Improved performance in Direct3D 12 games on the Linux engine, most of all in those that synchronize several queues many times a frame: a wait for the GPU now wakes as soon as its signal arrives, and three frequent queries are answered without a round trip to the render server (Zagrios/neptune#12, Zagrios/neptune#13, thanks @LeonMarzollDev)\n- Games on the Linux engine use less CPU while their idle threads wait (Zagrios/voile-lkd#24, thanks @LeonMarzollDev)\n- Games on the Linux engine now offer 16:10 and 21:9 resolutions below the screen's own, so a lower resolution is no longer stretched on a MacBook's screen or on an ultrawide monitor\n\n### Fixes\n\n- Fixed games on the Linux engine sometimes hanging as they start, or starting much slower than usual: one of the game's programs could end up waiting on an event that was no longer its own\n- Fixed Steam games on the Linux engine freezing when they refresh a server list: the thread synchronization of Steam's Linux client now works (Zagrios/voile-lkd#18, thanks @gkaragioul)\n- Fixed the Linux engine leaving a temporary folder behind after each session, which added up to hundreds of megabytes (Zagrios/voile-lkd#18, thanks @gkaragioul)\n- Fixed a game's window staying black on the Linux engine once the game draws in a second window (Zagrios/neptune#16, Zagrios/voile-wine#18, Zagrios/voile-wine#19, thanks @k33bs)\n- Fixed Direct3D 12 games on the Linux engine running at a few frames per second, or quitting with \"Device Removed\" 30 seconds after they start, when they keep waits armed for a long time (Zagrios/neptune#17, Zagrios/neptune#18, thanks @gkaragioul)\n- Fixed Direct3D 12 games on the Linux engine quitting with a driver error when they asked for a graphics pipeline Metal cannot make: it is now refused as Direct3D does (#6, thanks @gkaragioul)\n- Fixed Unreal Engine 5 games with virtual shadow maps freezing on their loading screen on the Linux engine (#5, thanks @k33bs)\n- Fixed games showing an \"outdated graphics driver\" warning at every start with D3DMetal on the Linux engine: its adapter now reports a driver version in the format its vendor uses (Zagrios/neptune#19, thanks @gkaragioul)\n- Fixed the mouse on the Linux engine landing above or below what the pointer shows when a window is not the size the game draws at (Zagrios/voile-lkd#20, thanks @gkaragioul)\n- Fixed the view jumping when a game on the Linux engine centers the pointer, and a game keeping the pointer after you switch to another app (Zagrios/voile-lkd#21, thanks @gkaragioul)\n- Fixed games that hide and show their window as they start leaving fullscreen and crashing on the Linux engine (Zagrios/voile-lkd#21, thanks @gkaragioul)\n- Fixed a game on the Linux engine that kept running unseen after a Force Quit (Zagrios/voile-lkd#19, thanks @gkaragioul)\n- Fixed games crashing at their first video, or playing none, when Direct3D 11 could not make textures of the decoded frames\n- Fixed games that ask whether the network connection is metered crashing as they connect (Zagrios/voile-wine#17, thanks @k33bs)"
+    },
+    {
       "version": "v26.3.0-25",
       "contract": 1,
       "published": "2026-11-09",
@@ -90,44 +99,6 @@
       "size": 430517340,
       "sha256": "e9ede5c94a2723efbbd5e79d882bb05a979e3fa8a6262ed48ad052a7af5f63ef",
       "notes": "CrossOver 26.3.0, Zagrios/voile-wine@20b4f0a3069ecc436ba030179b63f055b89aefbb, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@dea086fe06302a3d25049692bab332a9e1b9a82f, neptune@ac599b49cccd1a761973c214d71dd2b38de4e69a, dxmt@85c51603a49b806af22ac5d8a3c040dc92f993df, debian-root-trixie-20260928.\n**Full Changelog**: https://github.com/Zagrios/Voile/compare/v26.3.0-15...v26.3.0-16"
-    }
-  ],
-  "prereleases": [
-    {
-      "version": "v26.3.0-26.beta4",
-      "contract": 1,
-      "published": "2026-11-19",
-      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26.beta4/voile-v26.3.0-26.beta4.tar.xz",
-      "size": 505964048,
-      "sha256": "ddec257de1f28c7a365162464c391e7d6415bb6585f2fe37505ae9c8f84a6c1e",
-      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@d96760c4a34cbf180dbefb635478f97ca39c3e89, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@e6564f9302112875b3faf3156bbcc5ac7e271809, neptune@265be8af17861c31f0f121f660d429a47fd3adce, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at fac252d. Changes since v26.3.0-26.beta3:\n\n### Voile\n\n- Patch d3dmetal-native to refuse graphics pipelines Metal would abort on, for Hunt: Showdown 1896 (#6) (5c2541c)\n\n### Zagrios/voile-wine\n\n- nptunix: Reclaim the stalest wsd WSI state when all are in use. (#19) (d96760c)\n\n### Zagrios/voile-lkd\n\n- lkd: Run a process's exit hooks at a group exit, while other threads are still listed. (9027e99)\n- lkd: Give an ntsync anchor's inode to the new object when macOS gives it to a new pipe. (e6564f9)\n\n### Zagrios/neptune\n\n- neptune: Arm a fence event on an event ring that holds no other wait. (#17) (13562ca)\n- neptune: Allow a fence wait a day, not 30 s, before retiring it as device-lost. (#18) (1d6e4d5)\n- neptune: Report an AMD-style UMD version on an AMD adapter. (#19) (265be8a)"
-    },
-    {
-      "version": "v26.3.0-26.beta3",
-      "contract": 1,
-      "published": "2026-11-16",
-      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26.beta3/voile-v26.3.0-26.beta3.tar.xz",
-      "size": 505929044,
-      "sha256": "cc0a7c03c03c8e2fd0115f9eb412153b03fb0af23357bbd0176753edb9bdf108",
-      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@a4f18ecd58eb70a41b04a3890d693efed42bb800, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@71e125af9ea37f85834495eb4a5d82fb40895cc2, neptune@be783d9a2b2926dc7766405667e9a2bce5a1689f, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at 1f1c07b. Changes since v26.3.0-26.beta2:\n\n### Zagrios/voile-wine\n\n- nptunix: Give each swapchain its own wsd WSI state. (#18) (a4f18ec)\n\n### Zagrios/neptune\n\n- neptune: Give each swapchain its own WSI instance. (#16) (be783d9)"
-    },
-    {
-      "version": "v26.3.0-26.beta2",
-      "contract": 1,
-      "published": "2026-11-15",
-      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26.beta2/voile-v26.3.0-26.beta2.tar.xz",
-      "size": 505925408,
-      "sha256": "1108e8025d6e824a9cb6ae388ea5db24413e5da70ea6db547976cdbdb9f27d5c",
-      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@8dfea6b8073a22f2e44f244d0847f6b016cb35f7, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@71e125af9ea37f85834495eb4a5d82fb40895cc2, neptune@d4b6341c27019fd3ee1b634211f201aaabbfe27a, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at ee19813. Changes since v26.3.0-26.beta1:\n\n### Voile\n\n- Patch d3dmetal-native to keep shader-written reserved textures off sparse heaps, for Unreal's virtual shadow maps (#5) (0b76409)\n\n### Zagrios/voile-wine\n\n- windows.networking.connectivity: Implement IConnectionProfile::GetConnectionCost. (#17) (8dfea6b)\n\n### Zagrios/voile-lkd\n\n- wsd: End the game when wsd is stopped while it still has windows. (#19) (655998e)\n- lkd: Read a thread's times for getrusage(RUSAGE_THREAD) at most once a millisecond. (#24) (44c6598)\n- wsd: Put the pointer where the frame shows it when a window shows a frame of another size. (#20) (326dea1)\n- wsd: Take a warp's jump out of the next move, hold a clip only with the focus, and hide a window 100 ms late. (#21) (9279b46)\n- lkd: Implement System V semaphores, which Valve's Linux steamclient builds its thread sync objects on. (#18) (71e125a)\n\n### Zagrios/neptune\n\n- neptune: Wake a queue Wait when its Signal is dispatched instead of polling. (#12) (4532c9a)\n- neptune: Answer three hot synchronous D3D12/DXGI queries in the guest. (#13) (d4b6341)"
-    },
-    {
-      "version": "v26.3.0-26.beta1",
-      "contract": 1,
-      "published": "2026-11-13",
-      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-26.beta1/voile-v26.3.0-26.beta1.tar.xz",
-      "size": 505926036,
-      "sha256": "88adf476b9ee8d918ace1bd5132f2fd01f8ddafe073b16b8bc37804eb7e3f37e",
-      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@803742d9cca06bae1151ab88c81ac4df061868bf, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@b4d04c642884f315192d1c6b679917a8078a2795, neptune@08eb732ed8f77a7675455a86d79d8a24a5c6c928, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at 9b09d61. Changes since v26.3.0-25:\n\n### Voile\n\n- Offer betas in the feed, built from main every two hours (8fbb190)\n- Test the H.264 decoder with a Direct3D 11 device (da18cde)\n\n### Zagrios/voile-wine\n\n- winegstreamer: Decode to system memory when the Direct3D 11 device cannot make textures of the frames. (8a10ac9)\n- wineobelisk: List 16:10 and 21:9 display modes. (803742d)"
     }
   ]
 }
