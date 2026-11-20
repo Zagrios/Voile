@@ -100,5 +100,16 @@
       "sha256": "e9ede5c94a2723efbbd5e79d882bb05a979e3fa8a6262ed48ad052a7af5f63ef",
       "notes": "CrossOver 26.3.0, Zagrios/voile-wine@20b4f0a3069ecc436ba030179b63f055b89aefbb, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@dea086fe06302a3d25049692bab332a9e1b9a82f, neptune@ac599b49cccd1a761973c214d71dd2b38de4e69a, dxmt@85c51603a49b806af22ac5d8a3c040dc92f993df, debian-root-trixie-20260928.\n**Full Changelog**: https://github.com/Zagrios/Voile/compare/v26.3.0-15...v26.3.0-16"
     }
+  ],
+  "prereleases": [
+    {
+      "version": "v26.3.0-27.beta1",
+      "contract": 1,
+      "published": "2026-11-20",
+      "url": "https://github.com/Zagrios/Voile/releases/download/v26.3.0-27.beta1/voile-v26.3.0-27.beta1.tar.xz",
+      "size": 506002172,
+      "sha256": "de7703e3e59fce7d720026cd8d00a621c014797b7c6e93cfc50e52672cf64526",
+      "notes": "CrossOver 26.3.0, Zagrios/voile-wine@d96760c4a34cbf180dbefb635478f97ca39c3e89, ValveSoftware/Proton@5b89db940e0ebe3a137a6009a3589232fe084c09, D3DMetal from Evaluation environment for Windows games 4.0 beta 2. Linux engine: voile-lkd@7c7d977d13d2dc01d03a1a5887621bb19c36c406, neptune@265be8af17861c31f0f121f660d429a47fd3adce, dxmt@b7d97ee715fdfa8dc7ccd8c0ddbad7a22ac125f3, debian-root-trixie-20261109.\n\nAutomatic beta, built from main at 318383a. Changes since v26.3.0-26:\n\n### Zagrios/voile-lkd\n\n- wsd: Read a started audio stream at its rate while the device does not. (7c7d977)"
+    }
   ]
 }
