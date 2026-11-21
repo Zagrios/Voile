@@ -34,9 +34,11 @@ export MACOSX_DEPLOYMENT_TARGET=26.0
 export ZIG_GLOBAL_CACHE_DIR="$LINUX/zig-cache" ZIG_LOCAL_CACHE_DIR="$LINUX/zig-cache-local"
 # What the guest Wine does without: no X11, no system audio or Vulkan (wsd, wineobeliskaudio and Neptune replace them).
 # i386 adds the PE modules of new WoW64, which runs 32-bit programs in 64-bit processes: the unix side stays x86-64 only.
+# OpenGL goes through the root's Mesa: win32u's surfaceless EGL, rendered by virgl over the vtest socket (Neptune's
+# server with --use-cgl, the guest with GALLIUM_DRIVER=virpipe).
 WINE_OPTIONS=(--enable-win64 --enable-archs=i386,x86_64 --disable-tests --without-x --without-fontconfig
     --with-gstreamer --without-pulse --without-alsa --without-cups --without-sdl --without-vulkan
-    --without-opengl --without-dbus --without-udev --without-usb --without-v4l2 --without-gphoto --without-sane
+    --without-dbus --without-udev --without-usb --without-v4l2 --without-gphoto --without-sane
     --without-pcap --without-krb5 --without-oss --without-capi --without-netapi --without-unwind
     --without-wayland --without-inotify)
 
@@ -159,7 +161,7 @@ GSTREAMER_DEV_PACKAGES=(debian-gstreamer-dev debian-gst-plugins-base-dev debian-
 build_sysroot() {
     local key package archive member library paths
     key="$(field debian-freetype-dev sha256)-$(field debian-gnutls-dev sha256)-$(field debian-root sha256)"
-    key+="-$(field debian-x11proto-dev sha256)"
+    key+="-$(field debian-x11proto-dev sha256)-egl"
     for package in "${GSTREAMER_DEV_PACKAGES[@]}"; do
         key+="-$(field "$package" sha256)"
     done
@@ -183,6 +185,9 @@ build_sysroot() {
         ln -sf "$LINUX/debian-root/root/usr/lib/x86_64-linux-gnu/$library" \
             "$SYSROOT/usr/lib/x86_64-linux-gnu/${library%.so.*}.so"
     done
+    # Wine has its own EGL definitions: it only needs the library's name (win32u loads it at run time).
+    ln -sf "$LINUX/debian-root/root/usr/lib/x86_64-linux-gnu/libEGL.so.1" \
+        "$SYSROOT/usr/lib/x86_64-linux-gnu/libEGL.so"
     stamp sysroot "$key"
 }
 
@@ -218,7 +223,8 @@ build_wine() {
             FREETYPE_LIBS="-L$SYSROOT/usr/lib/x86_64-linux-gnu -lfreetype -Wl,--allow-shlib-undefined" \
             GNUTLS_CFLAGS="-I$SYSROOT/usr/include" \
             GNUTLS_LIBS="-L$SYSROOT/usr/lib/x86_64-linux-gnu -lgnutls -Wl,--allow-shlib-undefined" \
-            GSTREAMER_CFLAGS="$gstreamer_cflags" GSTREAMER_LIBS="$gstreamer_libs"
+            GSTREAMER_CFLAGS="$gstreamer_cflags" GSTREAMER_LIBS="$gstreamer_libs" \
+            EGL_CFLAGS="" EGL_LIBS="-L$SYSROOT/usr/lib/x86_64-linux-gnu -lEGL -Wl,--allow-shlib-undefined"
         nice -n 10 make -j"$JOBS"
         make install-lib prefix="$STAGE/wine" bindir="$STAGE/wine/bin" libdir="$STAGE/wine/lib" \
             dlldir="$STAGE/wine/lib/wine" datadir="$STAGE/wine/share" fontdir="$STAGE/wine/share/wine/fonts" \
