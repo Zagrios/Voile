@@ -61,8 +61,15 @@ strip_debug() {
 # DLLs go in lib/d3dmetal, beside Wine's own, as DXMT's go in lib/dxmt: Obelisk
 # puts the folder of a game's graphics backend first in Wine's DLL search.
 add_d3dmetal() {
+    local side
     ditto "$WORK/d3dmetal/lib/external" "$PACKAGE/lib/external"
     ditto "$WORK/d3dmetal/lib/wine" "$PACKAGE/lib/d3dmetal"
+    # A game's NGX loads nvngx.dll, and Wine finds a DLL's unix library by the DLL's name. D3DMetal's NGX is
+    # nvngx-on-metalfx, so both sides go in a second time under the name that is looked for, as they are: the
+    # DLL, and the link to libd3dshared.dylib that is its unix library.
+    for side in x86_64-windows/nvngx-on-metalfx.dll x86_64-unix/nvngx-on-metalfx.so; do
+        cp -P "$PACKAGE/lib/d3dmetal/$side" "$PACKAGE/lib/d3dmetal/${side/-on-metalfx/}"
+    done
 }
 
 # The Linux engine's runtime: the engine, the render servers with DXMT and
