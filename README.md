@@ -205,7 +205,7 @@ Wine loads one of these DLLs only through its placeholder in the prefix, the fil
 - `CX_ACTIVE_GRAPHICS_BACKEND`, `d3dmetal` or `dxmt`. voile-wine reports the hardware scheduling Direct3D 12 expects for D3DMetal alone.
 - D3DMetal's options. With ray tracing off, `D3DM_SUPPORT_DXR=0`: D3DMetal 4.0 offers ray tracing tier 1.1 by default.
 
-DLSS is not supported yet. D3DMetal's `nvngx-on-metalfx` answers DLSS through MetalFX once a game loads it as `nvngx.dll`, but games find `nvngx.dll` through the folder `HKLM\SOFTWARE\NVIDIA Corporation\Global\NGXCore` names, and D3DMetal's DXGI factory erases that value unless, with `D3DM_ENABLE_METALFX`, it locates `nvngx.dll` itself, which it does not do in voile-wine.
+DLSS runs on MetalFX through D3DMetal's `nvngx-on-metalfx`, which the package also carries as `nvngx.dll` and `nvngx.so`, the names a game's NGX and Wine's loader look for. A game finds `nvngx.dll` through the folder `HKLM\SOFTWARE\NVIDIA Corporation\Global\NGXCore` names. With `D3DM_ENABLE_METALFX=1`, D3DMetal's DXGI factory sets that value to the prefix's `system32` and presents an NVIDIA adapter, but only while the prefix's `nvapi64.dll` is Wine's placeholder: over a copy of D3DMetal's own `nvapi64.dll`, which wineboot leaves there when D3DMetal's folder is first in the DLL search, or over none, it erases the value. So a launcher copies `nvngx.dll` into `system32` and makes `nvapi64.dll` there a placeholder; Wine still loads D3DMetal's `nvapi64` from the runtime.
 
 ## Tests
 
